@@ -55,14 +55,11 @@ export const loginUser = async (userData: { username: string; password: string }
 
 export const getUsers = async () => {
   const response = await fetch(`${API_URL}/users`, {
-    headers,
-    credentials: 'include',
+    method:'get',
   });
-  
   if (!response.ok) {
     throw new Error('Erreur lors de la récupération des utilisateurs');
   }
-  
   return response.json();
 };
 
