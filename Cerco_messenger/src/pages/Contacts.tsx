@@ -22,23 +22,23 @@ const Contacts = () => {
   const [contacts, setContacts] = useState<User[]>([]);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-  useEffect(() => {
+useEffect(() => {
     // Récupérer tous les utilisateurs
-    const users: User[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("user_")) {
-        try {
-          const userData = JSON.parse(localStorage.getItem(key) || "");
-          if (userData.id !== currentUser.id) {
-            users.push(userData);
+    const users: User[] = []
+    try {
+      const userData = getUsers().then((response)=>{
+        response.forEach((item)=>{
+          if (item.id !== currentUser.id) {
+            users.push(item);
           }
-        } catch (e) {
-          console.error("Erreur lors de la lecture des données utilisateur:", e);
-        }
-      }
+        })
+        setAllUsers(users);
+        
+      });
+      
+    } catch (e) {
+      console.error("Erreur lors de la lecture des données utilisateur:", e);
     }
-    setAllUsers(users);
 
     // Récupérer les contacts de l'utilisateur
     const userContacts = JSON.parse(localStorage.getItem(`contacts_${currentUser.id}`) || "[]");
