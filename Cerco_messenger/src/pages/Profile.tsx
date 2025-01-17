@@ -102,8 +102,8 @@ const Profile = () => {
     });
   };
 
-   if (!profile) {
-    return <div>Chargement...</div>; ;
+  if (!profile) {
+    return <div>Chargement...</div>;
   }
 
   return (
