@@ -102,6 +102,10 @@ const Profile = () => {
     });
   };
 
+   if (!profile) {
+    return ;
+  }
+
   return (
     <div className="h-screen flex flex-col bg-background">
       <ProfileHeader />
