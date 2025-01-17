@@ -103,7 +103,7 @@ const Profile = () => {
   };
 
    if (!profile) {
-    return ;
+    return <div>Chargement...</div>; ;
   }
 
   return (
