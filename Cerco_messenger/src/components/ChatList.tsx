@@ -3,7 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
 import OnlineStatus from "./OnlineStatus";
-import { getUsers } from "@/utils/api";
 import { useToast } from "./ui/use-toast";
 
 interface ChatListProps {
@@ -18,32 +17,31 @@ interface User {
 }
 
 const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
-  const [users, setUsers] = useState<User[]>([]);
+  const [contacts, setContacts] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchContacts = async () => {
       try {
-        const fetchedUsers = await getUsers();
-        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const otherUsers = fetchedUsers.filter(user => user.id !== currentUser.id);
-        setUsers(otherUsers);
+        const userContacts = JSON.parse(localStorage.getItem(`contacts_${currentUser.id}`) || "[]");
+        setContacts(userContacts);
       } catch (error) {
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: "Impossible de charger les utilisateurs",
+          description: "Impossible de charger les contacts",
         });
       }
     };
 
-    fetchUsers();
-  }, [toast]);
+    fetchContacts();
+  }, [toast, currentUser.id]);
 
-  const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredContacts = contacts.filter(contact =>
+    contact.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -67,32 +65,32 @@ const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {filteredUsers.length === 0 ? (
+        {filteredContacts.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
-            Aucun utilisateur trouvé
+            Aucun contact trouvé
           </div>
         ) : (
-          filteredUsers.map((user) => (
+          filteredContacts.map((contact) => (
             <div
-              key={user.id}
-              onClick={() => onSelectChat(user.id)}
+              key={contact.id}
+              onClick={() => onSelectChat(contact.id)}
               className={`p-4 flex items-center gap-3 hover:bg-accent cursor-pointer transition-colors ${
-                selectedChat === user.id ? "bg-accent" : ""
+                selectedChat === contact.id ? "bg-accent" : ""
               }`}
             >
               <div className="relative">
                 <Avatar>
                   <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{contact.username.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <OnlineStatus online={false} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <h3 className="font-medium truncate">{user.username}</h3>
+                  <h3 className="font-medium truncate">{contact.username}</h3>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-muted-foreground truncate">{user.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">{contact.name}</p>
                 </div>
               </div>
             </div>
