@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 interface UserProfile {
   id: string;
@@ -18,40 +19,57 @@ interface UserProfile {
 
 const Profile = () => {
   const { toast } = useToast();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile>({
+    id: "default-id",
+    username: "default-username",
+    name: "Utilisateur",
+    phone: "default-phone",
+    description: "default-description",
+    avatar: undefined,
+    online: false,
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    console.log("User data from localStorage:", userData);
-    if (userData) {
-      const user = JSON.parse(userData);
-      setProfile({
-        ...user,
-        name: user.name || "Utilisateur",
-        phone: user.phone || "",
-        description: user.description || "",
-        online: true,
-      });
-    }
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get("/api/user"); // Remplacez "/api/user" par l'URL de votre API
+        const user = response.data;
+        setProfile({
+          ...user,
+          name: user.name || "Utilisateur",
+          phone: user.phone || "default-phone",
+          description: user.description || "default-description",
+          online: true,
+        });
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données de l'utilisateur :", error);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const handleEditChange = (field: string, value: string) => {
     setEditedProfile((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!profile) return;
 
     const updatedProfile = { ...profile, ...editedProfile };
     setProfile(updatedProfile);
-    localStorage.setItem("user", JSON.stringify(updatedProfile));
 
-    toast({
-      title: "Profil mis à jour",
-      description: "Vos modifications ont été enregistrées avec succès",
-    });
+    try {
+      await axios.put("/api/user", updatedProfile); // Remplacez "/api/user" par l'URL de votre API
+      toast({
+        title: "Profil mis à jour",
+        description: "Vos modifications ont été enregistrées avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil :", error);
+    }
 
     setIsEditing(false);
     setEditedProfile({});
@@ -71,7 +89,7 @@ const Profile = () => {
     reader.onloadend = () => {
       const updatedProfile = { ...profile, avatar: reader.result as string };
       setProfile(updatedProfile);
-      localStorage.setItem("user", JSON.stringify(updatedProfile));
+      // Vous pouvez également envoyer la nouvelle photo de profil à votre API ici
       toast({
         title: "Photo de profil mise à jour",
         description: "Votre photo de profil a été modifiée avec succès",
@@ -92,16 +110,12 @@ const Profile = () => {
 
     const updatedProfile = { ...profile, avatar: undefined };
     setProfile(updatedProfile);
-    localStorage.setItem("user", JSON.stringify(updatedProfile));
+    // Vous pouvez également envoyer la suppression de la photo de profil à votre API ici
     toast({
       title: "Photo de profil supprimée",
       description: "Votre photo de profil a été supprimée avec succès",
     });
   };
-
-  if (!profile) {
-    return <div>Chargement...</div>;
-  }
 
   return (
     <div className="h-screen flex flex-col bg-background">
