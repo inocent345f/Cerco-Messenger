@@ -161,7 +161,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
             </Avatar>
             <div>
               <h2 className="font-medium">{chatUser?.username}</h2>
-              <span className="text-sm text-green-500">En ligne</span>
+              <span className="text-sm text-green-500">{chatUser?.username} - En ligne</span>
             </div>
           </div>
         </div>
