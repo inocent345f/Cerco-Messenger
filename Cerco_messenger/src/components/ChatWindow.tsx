@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
-import { ArrowLeft, Settings, Phone, Video, MoreVertical, Star, Archive, Delete, Ban, Flag } from "lucide-react";
+import { ArrowLeft, Phone, Video, MoreVertical, Star, Archive, Delete, Ban, Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
         const fetchedMessages = await getMessages(chatId);
         const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
         
-        const formattedMessages = fetchedMessages.map(msg => ({
+        const formattedMessages = fetchedMessages.map((msg: any) => ({
           id: msg.id,
           text: msg.text,
           sent: msg.senderId === currentUser.id,
@@ -132,8 +132,6 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     navigate("/");
   };
 
-  if (!chatUser) return null;
-
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="p-4 border-b border-border flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
@@ -144,10 +142,10 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
               <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback>{chatUser.username?.[0].toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{chatUser?.username?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="font-medium">{chatUser.username}</h2>
+              <h2 className="font-medium">{chatUser?.username}</h2>
               <span className="text-sm text-green-500">En ligne</span>
             </div>
           </div>
