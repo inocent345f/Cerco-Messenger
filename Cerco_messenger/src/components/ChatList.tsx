@@ -26,8 +26,10 @@ const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
     const fetchContacts = async () => {
       try {
         const userContacts = JSON.parse(localStorage.getItem(`contacts_${currentUser.id}`) || "[]");
+        console.log("Fetched contacts:", userContacts); // Log des contacts récupérés
         setContacts(userContacts);
       } catch (error) {
+        console.error("Erreur lors du chargement des contacts:", error); // Log de l'erreur
         toast({
           variant: "destructive",
           title: "Erreur",
