@@ -103,8 +103,6 @@ const Profile = () => {
   };
 
   if (!profile) {
-    return <div>Chargement...</div>;
-  }
 
   return (
     <div className="h-screen flex flex-col bg-background">
