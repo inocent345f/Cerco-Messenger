@@ -23,20 +23,18 @@ const Contacts = () => {
   const [contacts, setContacts] = useState<User[]>([]);
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-useEffect(() => {
+  useEffect(() => {
     // Récupérer tous les utilisateurs
-    const users: User[] = []
+    const users: User[] = [];
     try {
-      const userData = getUsers().then((response)=>{
-        response.forEach((item)=>{
+      const userData = getUsers().then((response) => {
+        response.forEach((item) => {
           if (item.id !== currentUser.id) {
             users.push(item);
           }
-        })
+        });
         setAllUsers(users);
-        
       });
-      
     } catch (e) {
       console.error("Erreur lors de la lecture des données utilisateur:", e);
     }
@@ -76,7 +74,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen overflow-y-auto bg-background">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
