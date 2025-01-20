@@ -33,12 +33,13 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
   const [chatUser, setChatUser] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const fetchedMessages = await getMessages(chatId);
-        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+        console.log("Fetched messages:", fetchedMessages); // Log des messages récupérés
         
         const formattedMessages = fetchedMessages.map((msg: any) => ({
           id: msg.id,
@@ -49,6 +50,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
         
         setMessages(formattedMessages);
       } catch (error) {
+        console.error("Erreur lors du chargement des messages:", error); // Log de l'erreur
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -63,17 +65,29 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     }
 
     fetchMessages();
-  }, [chatId, toast]);
+  }, [chatId, toast, currentUser.id]);
 
   const handleSendMessage = async (text: string) => {
     try {
-      const response = await sendMessage({
-        receiverId: chatId,
-        text: text
+      const response = await fetch(`${API_URL}/messages`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: "include",
+        body: JSON.stringify({ receiverId: chatId, text })
       });
 
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi du message');
+      }
+
+      const responseData = await response.json();
+      console.log("Message sent response:", responseData); // Log de la réponse de l'envoi du message
+
       const newMessage = {
-        id: response.id,
+        id: responseData.id,
         text,
         sent: true,
         timestamp: Date.now()
@@ -81,6 +95,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
       
       setMessages(prev => [...prev, newMessage]);
     } catch (error) {
+      console.error("Erreur lors de l'envoi du message:", error); // Log de l'erreur
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -205,7 +220,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
           ))
         )}
       </div>
-      <MessageInput onSendMessage={handleSendMessage} receiverId={chatId} />
+      <MessageInput onSendMessage={handleSendMessage} />
     </div>
   );
 };
