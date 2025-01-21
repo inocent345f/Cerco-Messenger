@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Message from "./Message";
-import MessageInput from "./MessageInput";
+import Message from "@/components/Message";
+import MessageInput from "@/components/MessageInput";
 import { ArrowLeft, Phone, Video, MoreVertical, Star, Archive, Delete, Ban, Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
