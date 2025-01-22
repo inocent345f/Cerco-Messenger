@@ -1,16 +1,15 @@
 import axios from "axios";
 
+// L'URL de l'API est stockée dans un fichier .env ou dans les variables d'environnement
 const API_URL = import.meta.env.VITE_API_URL;
-
 
 interface User {
   id: string;
   username: string;
   name?: string;
-  created_at? : string;
-  email?: string
+  created_at?: string;
+  email?: string;
 }
-
 
 interface Message {
   id: string;
@@ -25,89 +24,81 @@ const headers = {
   'Accept': 'application/json',
 };
 
-export const registerUser = async (userData: { username: string; email: string, password: string }) => {
-  console.log(userData)
-  const response = await axios({
-    method:'post',
-    url: `${API_URL}/register`,
-    data:{
-      username: userData.username,
-      email: userData.email, 
-      password: userData.password
-    }}).then((response) => {
-      return response.data
-    }).catch((err) => {
-      console.log(err)
-      throw new Error('Erreur lors de la connexion')
-    })
-}
+// Fonction pour enregistrer un utilisateur
+export const registerUser = async (userData: { username: string; email: string; password: string }) => {
+  try {
+    const response = await axios.post(`${API_URL}/register`, userData);
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement:', error);
+    throw new Error(error.response?.data?.detail || 'Erreur lors de l\'enregistrement');
+  }
+};
 
-
-    
-
+// Fonction pour se connecter
 export const loginUser = async (userData: { username: string; password: string }) => {
   try {
     const response = await axios.post(`${API_URL}/login`, {
       username: userData.username,
       password: userData.password,
     });
-    return response.data;  
+    return response.data;
   } catch (error) {
     console.error("Erreur lors de la connexion:", error);
-    throw new Error("Une erreur est survenue lors de la connexion.");
+    throw new Error(error.response?.data?.detail || "Une erreur est survenue lors de la connexion.");
   }
 };
 
+// Fonction pour récupérer la liste des utilisateurs
 export const getUsers = async () => {
-  const response = await fetch(`${API_URL}/users`, {
-    method:'get',
-  });
-  if (!response.ok) {
-    throw new Error('Erreur lors de la récupération des utilisateurs');
+  try {
+    const response = await axios.get(`${API_URL}/users`);
+    return response.data;
+  } catch (error) {
+    console.error('Erreur dans la récupération des utilisateurs:', error);
+    throw new Error(error.response?.data?.detail || 'Une erreur est survenue lors de la récupération des utilisateurs');
   }
-  return response.json();
 };
 
+// Fonction pour envoyer un message
 export const sendMessage = async (message: { receiverId: string; text: string }) => {
-  const response = await fetch(`${API_URL}/messages`, {
-    method: 'POST',
-    headers,
-    credentials: 'include',
-    body: JSON.stringify(message),
-  });
-  
-  if (!response.ok) {
-    throw new Error('Erreur lors de l\'envoi du message');
+  try {
+    const response = await axios.post(`${API_URL}/messages`, message, {
+      headers,
+      withCredentials: true, // Assurez-vous que le token de session est envoyé
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erreur dans l\'envoi du message:', error);
+    throw new Error(error.response?.data?.detail || 'Une erreur est survenue lors de l\'envoi du message');
   }
-  
-  return response.json();
 };
 
+// Fonction pour récupérer les messages
 export const getMessages = async (receiverId: string) => {
-  const response = await fetch(`${API_URL}/messages/${receiverId}`, {
-    headers,
-    credentials: 'include',
-  });
-  
-  if (!response.ok) {
-    throw new Error('Erreur lors de la récupération des messages');
+  try {
+    const response = await axios.get(`${API_URL}/messages/${receiverId}`, {
+      headers,
+      withCredentials: true, // Assurez-vous que le token de session est envoyé
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erreur dans la récupération des messages:', error);
+    throw new Error(error.response?.data?.detail || 'Une erreur est survenue lors de la récupération des messages');
   }
-  
-  return response.json();
 };
 
+// Fonction pour vérifier l'OTP (One Time Password)
 export const verifyOtp = async (data: { email: string; token: string; type: string }) => {
-  console.log(data.token)
   try {
     const response = await axios.post(`${API_URL}/verify-otp`, data);
     return response.data;
   } catch (error) {
-    console.log(error)
+    console.error('Erreur dans la vérification OTP:', error);
     if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data.detail || "Erreur lors de la vérification OTP");
+      throw new Error(error.response?.data?.detail || "Erreur lors de la vérification OTP");
     } else {
       throw new Error("Une erreur réseau est survenue");
     }
   }
-
 };
