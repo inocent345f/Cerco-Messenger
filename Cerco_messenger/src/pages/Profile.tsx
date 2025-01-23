@@ -102,6 +102,7 @@ const Profile = () => {
       console.log('Données envoyées au serveur:', updatedData);
 
       // Envoyer les modifications au backend
+      //const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
       const response = await axios.put(`${API_URL}/update-user`, updatedData);
 
       console.log('Réponse du serveur:', response.data);
@@ -154,7 +155,11 @@ const Profile = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          const base64Data = (reader.result as string).split(',')[1];
+          if (!reader.result) {
+            throw new Error("Échec de la lecture du fichier");
+          }
+
+          const base64Data = reader.result.toString().split(',')[1];
           const username = localStorage.getItem('username');
           
           if (!username) {
@@ -166,49 +171,66 @@ const Profile = () => {
             return;
           }
 
-          console.log('Envoi de la photo...');
-          const response = await axios.post(`${API_URL}/update-profile-picture`, {
-            username: username,
-            file_data: base64Data
-          });
-
-          console.log('Réponse du serveur:', response.data);
-
-          if (response.data.status === "success") {
-            // Mettre à jour l'état local avec la nouvelle URL de la photo
-            setProfile(prev => ({
-              ...prev,
-              avatar: response.data.profile_picture_url
-            }));
-
-            toast({
-              title: "Photo de profil mise à jour",
-              description: "Votre photo de profil a été modifiée avec succès",
+          console.log('Début de l\'upload de la photo...');
+          
+          try {
+            const response = await axios.post(`${API_URL}/update-profile-picture`, {
+              username: username,
+              file_data: base64Data
+            }, {
+              headers: {
+                'Content-Type': 'application/json'
+              }
             });
-          } else {
-            throw new Error("La mise à jour de la photo a échoué");
+
+            console.log('Réponse du serveur:', response.data);
+
+            if (response.data.status === "success" && response.data.profile_picture_url) {
+              // Mettre à jour l'état local avec la nouvelle URL de la photo
+              setProfile(prev => ({
+                ...prev,
+                avatar: response.data.profile_picture_url
+              }));
+
+              toast({
+                title: "Photo de profil mise à jour",
+                description: "Votre photo de profil a été modifiée avec succès",
+              });
+            } else {
+              console.error('Réponse du serveur invalide:', response.data);
+              throw new Error("La mise à jour de la photo a échoué : réponse invalide du serveur");
+            }
+          } catch (uploadError: any) {
+            console.error("Erreur détaillée de l'upload:", {
+              message: uploadError.message,
+              response: uploadError.response?.data,
+              status: uploadError.response?.status
+            });
+            throw new Error(`Erreur d'upload: ${uploadError.response?.data?.message || uploadError.message}`);
           }
-        } catch (error) {
-          console.error("Erreur lors de l'envoi de la photo:", error);
+        } catch (error: any) {
+          console.error("Erreur lors du traitement ou de l'envoi de la photo:", error);
           toast({
             title: "Erreur",
-            description: "Impossible de mettre à jour la photo de profil",
+            description: error.message || "Impossible de mettre à jour la photo de profil",
             variant: "destructive",
           });
         }
       };
 
-      reader.onerror = () => {
+      reader.onerror = (error) => {
+        console.error("Erreur lors de la lecture du fichier:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de lire le fichier",
+          description: "Impossible de lire le fichier image",
           variant: "destructive",
         });
       };
 
+      console.log('Début de la lecture du fichier...');
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Erreur lors de la lecture du fichier:", error);
+      console.error("Erreur générale lors du traitement de la photo:", error);
       toast({
         title: "Erreur",
         description: "Impossible de traiter la photo",
