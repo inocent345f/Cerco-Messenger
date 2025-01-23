@@ -102,3 +102,30 @@ export const verifyOtp = async (data: { email: string; token: string; type: stri
     }
   }
 };
+
+// Fonction pour créer une instance axios authentifiée
+export const createAuthenticatedAxios = () => {
+  const token = localStorage.getItem('accessToken');
+  return axios.create({
+    baseURL: API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : '',
+    }
+  });
+};
+
+// Fonction pour mettre à jour la photo de profil
+export const updateProfilePicture = async (username: string, fileData: string) => {
+  try {
+    const axiosInstance = createAuthenticatedAxios();
+    const response = await axiosInstance.post('/update-profile-picture', {
+      username,
+      file_data: fileData
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour de la photo:', error);
+    throw error;
+  }
+};
