@@ -141,6 +141,30 @@ const Profile = () => {
     }
   };
 
+  const updateProfilePicture = async (username: string, base64Data: string) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error("Token d'accès manquant");
+      }
+
+      const response = await axios.post(`${API_URL}/update-profile-picture`, {
+        username,
+        file_data: base64Data
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la photo de profil :", error);
+      throw error;
+    }
+  };
+
   const handleAvatarChange = async (file: File) => {
     if (!isEditing) {
       toast({
@@ -161,25 +185,14 @@ const Profile = () => {
 
           const base64Data = reader.result.toString().split(',')[1];
           const username = localStorage.getItem('username');
-          const token = localStorage.getItem('accessToken'); // Changé de 'token' à 'accessToken'
+          const token = localStorage.getItem('accessToken');
           
-          console.log('Vérification des informations d\'authentification:', {
-            username: username,
-            hasToken: !!token,
-            tokenLength: token?.length
-          });
-
           if (!username || !token) {
-            console.error('Informations d\'authentification manquantes:', {
-              username: !!username,
-              token: !!token
-            });
             toast({
               title: "Erreur",
               description: "Utilisateur non connecté. Veuillez vous reconnecter.",
               variant: "destructive",
             });
-            window.location.href = '/auth';
             return;
           }
 
@@ -188,23 +201,13 @@ const Profile = () => {
           console.log('Taille du fichier:', file.size, 'bytes');
           
           try {
-            const response = await axios.post(`${API_URL}/update-profile-picture`, {
-              username: username,
-              file_data: base64Data
-            }, {
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            });
+            const response = await updateProfilePicture(username, base64Data);
+            console.log('Réponse du serveur:', response);
 
-            console.log('Réponse du serveur:', response.data);
-
-            if (response.data.status === "success" && response.data.profile_picture_url) {
-              // Mettre à jour l'état local avec la nouvelle URL de la photo
+            if (response.status === "success" && response.profile_picture_url) {
               setProfile(prev => ({
                 ...prev,
-                avatar: response.data.profile_picture_url
+                avatar: response.profile_picture_url
               }));
 
               toast({
@@ -212,25 +215,22 @@ const Profile = () => {
                 description: "Votre photo de profil a été modifiée avec succès",
               });
             } else {
-              console.error('Réponse du serveur invalide:', response.data);
+              console.error('Réponse du serveur invalide:', response);
               throw new Error("La mise à jour de la photo a échoué : réponse invalide du serveur");
             }
           } catch (uploadError: any) {
             console.error("Erreur détaillée de l'upload:", {
               message: uploadError.message,
               response: uploadError.response?.data,
-              status: uploadError.response?.status,
-              headers: uploadError.response?.headers
+              status: uploadError.response?.status
             });
 
             // Afficher un message d'erreur plus détaillé
             let errorMessage = "Impossible de mettre à jour la photo de profil";
-            if (uploadError.response?.status === 403 || 
-                (uploadError.response?.data?.detail && uploadError.response.data.detail.includes('Unauthorized'))) {
-              errorMessage = "Session expirée. Veuillez vous reconnecter.";
-              localStorage.removeItem('accessToken');
-              localStorage.removeItem('username');
-              window.location.href = '/auth';
+            
+            if (uploadError.response?.status === 401 || uploadError.response?.status === 403) {
+              console.log('Erreur d\'authentification, mais on ne déconnecte pas l\'utilisateur');
+              errorMessage = "Erreur d'authentification. Veuillez réessayer.";
             } else if (uploadError.response?.data?.detail) {
               errorMessage = uploadError.response.data.detail;
             } else if (uploadError.response?.status === 500) {
