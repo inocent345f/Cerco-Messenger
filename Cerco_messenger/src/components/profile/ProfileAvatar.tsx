@@ -54,7 +54,11 @@ export const ProfileAvatar = ({
           }`}
           onClick={handleAvatarClick}
         >
-          <AvatarImage src={avatar} />
+          <AvatarImage 
+            src={avatar} 
+            alt={`Photo de profil de ${name}`}
+            className="object-cover"
+          />
           <AvatarFallback className="bg-primary/10">
             <User className="h-12 w-12 text-primary" />
           </AvatarFallback>
