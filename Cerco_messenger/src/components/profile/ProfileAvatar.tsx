@@ -52,62 +52,27 @@ export const ProfileAvatar = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Vérifier la taille du fichier (max 1MB pour éviter les problèmes de limite de requête)
-      if (file.size > 1 * 1024 * 1024) {
+      // Vérifier la taille du fichier (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "Fichier trop volumineux",
-          description: "La taille maximale autorisée est de 1MB",
+          description: "La taille maximale autorisée est de 5MB",
           variant: "destructive",
         });
         return;
       }
 
       // Vérifier le type de fichier
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (!allowedTypes.includes(file.type)) {
+      if (!file.type.startsWith('image/')) {
         toast({
           title: "Type de fichier non supporté",
-          description: "Seuls les formats JPG et PNG sont acceptés",
+          description: "Veuillez sélectionner une image",
           variant: "destructive",
         });
         return;
       }
 
-      // Vérifier les dimensions de l'image
-      const img = new Image();
-      const objectUrl = URL.createObjectURL(file);
-      
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl);
-        if (img.width > 1024 || img.height > 1024) {
-          toast({
-            title: "Image trop grande",
-            description: "Les dimensions de l'image ne doivent pas dépasser 1024x1024 pixels",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        console.log('Validation de l\'image réussie:', {
-          type: file.type,
-          size: file.size,
-          width: img.width,
-          height: img.height
-        });
-
-        onAvatarChange(file);
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        toast({
-          title: "Erreur",
-          description: "Impossible de lire l'image. Veuillez réessayer avec une autre image.",
-          variant: "destructive",
-        });
-      };
-
-      img.src = objectUrl;
+      onAvatarChange(file);
     }
 
     // Réinitialiser l'input pour permettre de sélectionner le même fichier
