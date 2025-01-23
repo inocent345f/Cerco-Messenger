@@ -102,7 +102,7 @@ const Profile = () => {
       console.log('Données envoyées au serveur:', updatedData);
 
       // Envoyer les modifications au backend
-      const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
+      const response = await axios.put(`${API_URL}/update-user`, updatedData);
 
       console.log('Réponse du serveur:', response.data);
 
