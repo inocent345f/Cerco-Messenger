@@ -42,16 +42,17 @@ const Profile = () => {
           console.error('Username not found in localStorage');
           return;
         }
-        console.log(localStorage)
+       // console.log(localStorage)
+       //const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
         const response = await axios.get(`${API_URL}/user?username=${username}`);
         const user = response.data;
-        console.log('User data:', user);
+       // console.log('User data:', user);
         setProfile({
           ...user,
-          name: user.username ? user.username : "Utilisateur",
-          ///phone: user.phone || "default-phone",
-          ///description: user.description || "default-description",
-          ///online: true,
+          name: user.name ? user.name : "Utilisateur",
+          phone: user.phone || "default-phone",
+          description: user.description || "default-description",
+          online: true,
         });
       } catch (error) {
         console.error("Erreur lors de la récupération des données de l'utilisateur :", error);
@@ -68,24 +69,60 @@ const Profile = () => {
   const handleSave = async () => {
     if (!profile) return;
 
-    const updatedProfile = { ...profile, ...editedProfile };
-    setProfile(updatedProfile);
-
     try {
-      await axios.put("/api/user", updatedProfile); // Remplacez "/api/user" par l'URL de votre API
-      toast({
-        title: "Profil mis à jour",
-        description: "Vos modifications ont été enregistrées avec succès",
-      });
+      const username = localStorage.getItem('username');
+      if (!username) {
+        toast({
+          title: "Erreur",
+          description: "Utilisateur non connecté",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Préparer les données à mettre à jour
+      const updatedData = {
+        username: username,
+        name: editedProfile.name || profile.name,
+        phone: editedProfile.phone || profile.phone,
+        description: editedProfile.description || profile.description,
+        profile_picture_url: profile.avatar
+      };
+
+      // Envoyer les modifications au backend
+      //const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
+      const response = await axios.put(`${API_URL}/update-user`, updatedData);
+
+      if (response.data.status === "success") {
+        // Mettre à jour l'état local avec les nouvelles données
+        setProfile({
+          ...profile,
+          ...updatedData,
+          avatar: profile.avatar // Conserver l'URL de l'avatar
+        });
+
+        toast({
+          title: "Profil mis à jour",
+          description: "Vos modifications ont été enregistrées avec succès",
+        });
+
+        // Réinitialiser le mode édition
+        setIsEditing(false);
+        setEditedProfile({});
+      } else {
+        throw new Error("La mise à jour a échoué");
+      }
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil :", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le profil. Veuillez réessayer.",
+        variant: "destructive",
+      });
     }
-
-    setIsEditing(false);
-    setEditedProfile({});
   };
 
-  const handleAvatarChange = (file: File) => {
+  const handleAvatarChange = async (file: File) => {
     if (!isEditing) {
       toast({
         title: "Mode édition requis",
@@ -95,20 +132,56 @@ const Profile = () => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const updatedProfile = { ...profile, avatar: reader.result as string };
-      setProfile(updatedProfile);
-      // Vous pouvez également envoyer la nouvelle photo de profil à votre API ici
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = (reader.result as string).split(',')[1];
+        const username = localStorage.getItem('username');
+        
+        if (!username) {
+          toast({
+            title: "Erreur",
+            description: "Utilisateur non connecté",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Envoyer la nouvelle photo au backend
+        //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
+        //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
+        const response = await axios.post(`${API_URL}/update-profile-picture`, {
+          username: username,
+          file_data: base64Data
+        });
+
+        if (response.data.status === "success") {
+          // Mettre à jour l'état local avec la nouvelle URL de la photo
+          setProfile(prev => ({
+            ...prev,
+            avatar: response.data.profile_picture_url
+          }));
+
+          toast({
+            title: "Photo de profil mise à jour",
+            description: "Votre photo de profil a été modifiée avec succès",
+          });
+        } else {
+          throw new Error("La mise à jour de la photo a échoué");
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la photo de profil:", error);
       toast({
-        title: "Photo de profil mise à jour",
-        description: "Votre photo de profil a été modifiée avec succès",
+        title: "Erreur",
+        description: "Impossible de mettre à jour la photo de profil",
+        variant: "destructive",
       });
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
-  const handleAvatarRemove = () => {
+  const handleAvatarRemove = async () => {
     if (!isEditing) {
       toast({
         title: "Mode édition requis",
@@ -118,13 +191,45 @@ const Profile = () => {
       return;
     }
 
-    const updatedProfile = { ...profile, avatar: undefined };
-    setProfile(updatedProfile);
-    // Vous pouvez également envoyer la suppression de la photo de profil à votre API ici
-    toast({
-      title: "Photo de profil supprimée",
-      description: "Votre photo de profil a été supprimée avec succès",
-    });
+    try {
+      const username = localStorage.getItem('username');
+      if (!username) {
+        toast({
+          title: "Erreur",
+          description: "Utilisateur non connecté",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Envoyer la requête de suppression au backend
+      //const response = await axios.delete("http://127.0.0.1:8000/remove-profile-picture", {
+      const response = await axios.delete(`${API_URL}/remove-profile-picture`, {
+        data: { username }
+      });
+
+      if (response.data.status === "success") {
+        // Mettre à jour l'état local en supprimant l'avatar
+        setProfile(prev => ({
+          ...prev,
+          avatar: undefined
+        }));
+
+        toast({
+          title: "Photo de profil supprimée",
+          description: "Votre photo de profil a été supprimée avec succès",
+        });
+      } else {
+        throw new Error("La suppression de la photo a échoué");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la photo de profil:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer la photo de profil",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
