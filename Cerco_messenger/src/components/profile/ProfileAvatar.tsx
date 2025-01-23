@@ -1,5 +1,5 @@
 import React from "react";
-import { Camera, Trash2, User } from "lucide-react";
+import { Camera, Trash2, User, Image as ImageIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,8 +37,17 @@ export const ProfileAvatar = ({
 
   const handleAvatarClick = () => {
     if (!isEditing) return;
-    fileInputRef.current?.click();
+    
+    if (isMobile) {
+      // Sur mobile, on affiche une boîte de dialogue pour choisir
+      setShowImageSourceDialog(true);
+    } else {
+      // Sur desktop, on ouvre directement le sélecteur de fichier
+      fileInputRef.current?.click();
+    }
   };
+
+  const [showImageSourceDialog, setShowImageSourceDialog] = React.useState(false);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -65,6 +74,10 @@ export const ProfileAvatar = ({
 
       onAvatarChange(file);
     }
+    // Réinitialiser l'input pour permettre de sélectionner le même fichier
+    if (event.target) {
+      event.target.value = '';
+    }
   };
 
   return (
@@ -76,7 +89,6 @@ export const ProfileAvatar = ({
           onChange={handleFileChange}
           accept="image/*"
           className="hidden"
-          capture={isMobile ? "environment" : undefined}
         />
         
         <Avatar 
@@ -139,6 +151,54 @@ export const ProfileAvatar = ({
             )}
           </div>
         )}
+
+        {/* Boîte de dialogue pour choisir la source de l'image sur mobile */}
+        <AlertDialog open={showImageSourceDialog} onOpenChange={setShowImageSourceDialog}>
+          <AlertDialogContent className="w-[90vw] max-w-lg">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Changer la photo de profil</AlertDialogTitle>
+              <AlertDialogDescription>
+                Choisissez comment vous souhaitez ajouter votre photo
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="flex flex-col gap-2">
+              <Button 
+                variant="outline" 
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.capture = 'environment';
+                  input.onchange = (e) => handleFileChange(e as any);
+                  input.click();
+                  setShowImageSourceDialog(false);
+                }}
+              >
+                <Camera className="h-4 w-4" />
+                Prendre une photo
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => {
+                  fileInputRef.current?.click();
+                  setShowImageSourceDialog(false);
+                }}
+              >
+                <Camera className="h-4 w-4" />
+                Choisir depuis la galerie
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full mt-2"
+                onClick={() => setShowImageSourceDialog(false)}
+              >
+                Annuler
+              </Button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
