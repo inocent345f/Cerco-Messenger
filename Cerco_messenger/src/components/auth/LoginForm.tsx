@@ -28,9 +28,8 @@ const LoginForm = ({ onToggle }: { onToggle: () => void }) => {
         password: formData.password,
       });
 
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("accessToken", response.access_token);
-      localStorage.setItem("username", formData.identifier);
+    localStorage.setItem("isAuthenticated", "true");
+    localStorage.setItem("accessToken", response.access_token);
       
       navigate("/");
       toast({
