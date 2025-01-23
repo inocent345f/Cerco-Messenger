@@ -161,14 +161,25 @@ const Profile = () => {
 
           const base64Data = reader.result.toString().split(',')[1];
           const username = localStorage.getItem('username');
-          const token = localStorage.getItem('token');
+          const token = localStorage.getItem('accessToken'); // Changé de 'token' à 'accessToken'
           
+          console.log('Vérification des informations d\'authentification:', {
+            username: username,
+            hasToken: !!token,
+            tokenLength: token?.length
+          });
+
           if (!username || !token) {
+            console.error('Informations d\'authentification manquantes:', {
+              username: !!username,
+              token: !!token
+            });
             toast({
               title: "Erreur",
-              description: "Utilisateur non connecté",
+              description: "Utilisateur non connecté. Veuillez vous reconnecter.",
               variant: "destructive",
             });
+            window.location.href = '/auth';
             return;
           }
 
@@ -217,6 +228,9 @@ const Profile = () => {
             if (uploadError.response?.status === 403 || 
                 (uploadError.response?.data?.detail && uploadError.response.data.detail.includes('Unauthorized'))) {
               errorMessage = "Session expirée. Veuillez vous reconnecter.";
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('username');
+              window.location.href = '/auth';
             } else if (uploadError.response?.data?.detail) {
               errorMessage = uploadError.response.data.detail;
             } else if (uploadError.response?.status === 500) {
@@ -228,13 +242,6 @@ const Profile = () => {
               description: errorMessage,
               variant: "destructive",
             });
-
-            // Si c'est une erreur d'authentification, rediriger vers la page de connexion
-            if (uploadError.response?.status === 403) {
-              localStorage.removeItem('token');
-              localStorage.removeItem('username');
-              window.location.href = '/auth';
-            }
           }
         } catch (error: any) {
           console.error("Erreur lors du traitement ou de l'envoi de la photo:", error);
