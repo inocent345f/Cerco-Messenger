@@ -42,10 +42,10 @@ const Profile = () => {
           console.error('Username not found in localStorage');
           return;
         }
-       // console.log(localStorage)
+        console.log(localStorage)
         const response = await axios.get(`${API_URL}/user?username=${username}`);
         const user = response.data;
-       // console.log('User data:', user);
+        console.log('User data:', user);
         setProfile({
           ...user,
           name: user.username ? user.username : "Utilisateur",
