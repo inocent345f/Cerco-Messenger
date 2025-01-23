@@ -7,6 +7,8 @@ import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface UserProfile {
   id: string;
   username: string;
@@ -34,14 +36,22 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await axios.get("/api/user"); // Remplacez "/api/user" par l'URL de votre API
+        // Get username from localStorage or use a default
+        const username = localStorage.getItem('username');
+        if (!username) {
+          console.error('Username not found in localStorage');
+          return;
+        }
+       // console.log(localStorage)
+        const response = await axios.get(`${API_URL}/user?username=${username}`);
         const user = response.data;
+       // console.log('User data:', user);
         setProfile({
           ...user,
-          name: user.name || "Utilisateur",
-          phone: user.phone || "default-phone",
-          description: user.description || "default-description",
-          online: true,
+          name: user.username ? user.username : "Utilisateur",
+          ///phone: user.phone || "default-phone",
+          ///description: user.description || "default-description",
+          ///online: true,
         });
       } catch (error) {
         console.error("Erreur lors de la récupération des données de l'utilisateur :", error);
