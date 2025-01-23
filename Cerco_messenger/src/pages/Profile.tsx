@@ -172,8 +172,11 @@ const Profile = () => {
           }
 
           console.log('Début de l\'upload de la photo...');
+          console.log('Type de fichier:', file.type);
+          console.log('Taille du fichier:', file.size, 'bytes');
           
           try {
+            // On revient au format attendu par le backend
             const response = await axios.post(`${API_URL}/update-profile-picture`, {
               username: username,
               file_data: base64Data
@@ -204,9 +207,23 @@ const Profile = () => {
             console.error("Erreur détaillée de l'upload:", {
               message: uploadError.message,
               response: uploadError.response?.data,
-              status: uploadError.response?.status
+              status: uploadError.response?.status,
+              headers: uploadError.response?.headers
             });
-            throw new Error(`Erreur d'upload: ${uploadError.response?.data?.message || uploadError.message}`);
+
+            // Afficher un message d'erreur plus détaillé
+            let errorMessage = "Impossible de mettre à jour la photo de profil";
+            if (uploadError.response?.data?.detail) {
+              errorMessage = uploadError.response.data.detail;
+            } else if (uploadError.response?.status === 500) {
+              errorMessage = "Erreur serveur. La taille de l'image est peut-être trop grande. Veuillez réessayer avec une image plus petite.";
+            }
+
+            toast({
+              title: "Erreur",
+              description: errorMessage,
+              variant: "destructive",
+            });
           }
         } catch (error: any) {
           console.error("Erreur lors du traitement ou de l'envoi de la photo:", error);
