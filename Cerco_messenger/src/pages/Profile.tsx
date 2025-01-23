@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -21,6 +22,7 @@ interface UserProfile {
 
 const Profile = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<UserProfile>({
     id: "default-id",
     username: "default-username",
@@ -238,7 +240,7 @@ const Profile = () => {
       <ProfileHeader />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="px-6 pb-20 max-w-2xl mx-auto w-full">
+        <div className={`px-4 md:px-6 pb-20 mx-auto w-full ${isMobile ? 'max-w-full' : 'max-w-2xl'}`}>
           <div className="flex justify-end mt-4">
             <Button
               variant="ghost"
@@ -261,6 +263,7 @@ const Profile = () => {
             onAvatarChange={handleAvatarChange}
             onAvatarRemove={handleAvatarRemove}
             isEditing={isEditing}
+            isMobile={isMobile}
           />
 
           <div className="mt-8 space-y-6">
@@ -279,6 +282,7 @@ const Profile = () => {
                 setIsEditing(false);
                 setEditedProfile({});
               }}
+              isMobile={isMobile}
             />
           </div>
         </div>
