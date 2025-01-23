@@ -43,8 +43,8 @@ const Profile = () => {
           return;
         }
        // console.log(localStorage)
-       //const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
-        const response = await axios.get(`${API_URL}/user?username=${username}`);
+        const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
+        // const response = await axios.get(`${API_URL}/user?username=${username}`);
         const user = response.data;
        // console.log('User data:', user);
         setProfile({
@@ -52,6 +52,7 @@ const Profile = () => {
           name: user.name ? user.name : "Utilisateur",
           phone: user.phone || "default-phone",
           description: user.description || "default-description",
+          avatar: user.profile_picture_url, // Utiliser l'URL de la photo de profil
           online: true,
         });
       } catch (error) {
@@ -90,8 +91,8 @@ const Profile = () => {
       };
 
       // Envoyer les modifications au backend
-      //const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
-      const response = await axios.put(`${API_URL}/update-user`, updatedData);
+      const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
+      // const response = await axios.put(`${API_URL}/update-user`, updatedData);
 
       if (response.data.status === "success") {
         // Mettre à jour l'état local avec les nouvelles données
@@ -149,8 +150,8 @@ const Profile = () => {
 
         // Envoyer la nouvelle photo au backend
         //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
-        //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
-        const response = await axios.post(`${API_URL}/update-profile-picture`, {
+        const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
+        // const response = await axios.post(`${API_URL}/update-profile-picture`, {
           username: username,
           file_data: base64Data
         });
