@@ -161,8 +161,9 @@ const Profile = () => {
 
           const base64Data = reader.result.toString().split(',')[1];
           const username = localStorage.getItem('username');
+          const token = localStorage.getItem('token');
           
-          if (!username) {
+          if (!username || !token) {
             toast({
               title: "Erreur",
               description: "Utilisateur non connecté",
@@ -176,13 +177,13 @@ const Profile = () => {
           console.log('Taille du fichier:', file.size, 'bytes');
           
           try {
-            // On revient au format attendu par le backend
             const response = await axios.post(`${API_URL}/update-profile-picture`, {
               username: username,
               file_data: base64Data
             }, {
               headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
               }
             });
 
@@ -213,7 +214,10 @@ const Profile = () => {
 
             // Afficher un message d'erreur plus détaillé
             let errorMessage = "Impossible de mettre à jour la photo de profil";
-            if (uploadError.response?.data?.detail) {
+            if (uploadError.response?.status === 403 || 
+                (uploadError.response?.data?.detail && uploadError.response.data.detail.includes('Unauthorized'))) {
+              errorMessage = "Session expirée. Veuillez vous reconnecter.";
+            } else if (uploadError.response?.data?.detail) {
               errorMessage = uploadError.response.data.detail;
             } else if (uploadError.response?.status === 500) {
               errorMessage = "Erreur serveur. La taille de l'image est peut-être trop grande. Veuillez réessayer avec une image plus petite.";
@@ -224,6 +228,13 @@ const Profile = () => {
               description: errorMessage,
               variant: "destructive",
             });
+
+            // Si c'est une erreur d'authentification, rediriger vers la page de connexion
+            if (uploadError.response?.status === 403) {
+              localStorage.removeItem('token');
+              localStorage.removeItem('username');
+              window.location.href = '/auth';
+            }
           }
         } catch (error: any) {
           console.error("Erreur lors du traitement ou de l'envoi de la photo:", error);
