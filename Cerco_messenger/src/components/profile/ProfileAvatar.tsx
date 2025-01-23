@@ -21,6 +21,7 @@ interface ProfileAvatarProps {
   onAvatarChange: (file: File) => void;
   onAvatarRemove: () => void;
   isEditing: boolean;
+  isMobile: boolean;
 }
 
 export const ProfileAvatar = ({ 
@@ -28,7 +29,8 @@ export const ProfileAvatar = ({
   name, 
   onAvatarChange, 
   onAvatarRemove,
-  isEditing 
+  isEditing,
+  isMobile
 }: ProfileAvatarProps) => {
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -49,7 +51,7 @@ export const ProfileAvatar = ({
     <div className="flex justify-center mt-8">
       <div className="relative group">
         <Avatar 
-          className={`w-32 h-32 border-4 border-primary ${
+          className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-4 border-primary ${
             isEditing ? "cursor-pointer transition-transform hover:scale-105" : ""
           }`}
           onClick={handleAvatarClick}
@@ -60,7 +62,7 @@ export const ProfileAvatar = ({
             className="object-cover"
           />
           <AvatarFallback className="bg-primary/10">
-            <User className="h-12 w-12 text-primary" />
+            <User className={`${isMobile ? 'h-8 w-8' : 'h-12 w-12'} text-primary`} />
           </AvatarFallback>
         </Avatar>
         
@@ -68,10 +70,10 @@ export const ProfileAvatar = ({
           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex gap-2">
             <Button
               size="icon"
-              className="rounded-full bg-primary hover:bg-primary/90 h-8 w-8"
+              className={`rounded-full bg-primary hover:bg-primary/90 ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`}
               onClick={handleAvatarClick}
             >
-              <Camera className="h-4 w-4" />
+              <Camera className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </Button>
             
             {avatar && (
@@ -80,9 +82,9 @@ export const ProfileAvatar = ({
                   <Button
                     size="icon"
                     variant="destructive"
-                    className="rounded-full h-8 w-8"
+                    className={`rounded-full ${isMobile ? 'h-6 w-6' : 'h-8 w-8'}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
