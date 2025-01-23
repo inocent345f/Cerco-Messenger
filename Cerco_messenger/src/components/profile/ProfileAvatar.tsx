@@ -52,21 +52,22 @@ export const ProfileAvatar = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Vérifier la taille du fichier (max 2MB pour éviter les problèmes de limite de requête)
-      if (file.size > 2 * 1024 * 1024) {
+      // Vérifier la taille du fichier (max 1MB pour éviter les problèmes de limite de requête)
+      if (file.size > 1 * 1024 * 1024) {
         toast({
           title: "Fichier trop volumineux",
-          description: "La taille maximale autorisée est de 2MB",
+          description: "La taille maximale autorisée est de 1MB",
           variant: "destructive",
         });
         return;
       }
 
       // Vérifier le type de fichier
-      if (!file.type.startsWith('image/')) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
         toast({
           title: "Type de fichier non supporté",
-          description: "Veuillez sélectionner une image (JPG, PNG, etc.)",
+          description: "Seuls les formats JPG et PNG sont acceptés",
           variant: "destructive",
         });
         return;
@@ -78,14 +79,22 @@ export const ProfileAvatar = ({
       
       img.onload = () => {
         URL.revokeObjectURL(objectUrl);
-        if (img.width > 2048 || img.height > 2048) {
+        if (img.width > 1024 || img.height > 1024) {
           toast({
             title: "Image trop grande",
-            description: "Les dimensions de l'image ne doivent pas dépasser 2048x2048 pixels",
+            description: "Les dimensions de l'image ne doivent pas dépasser 1024x1024 pixels",
             variant: "destructive",
           });
           return;
         }
+
+        console.log('Validation de l\'image réussie:', {
+          type: file.type,
+          size: file.size,
+          width: img.width,
+          height: img.height
+        });
+
         onAvatarChange(file);
       };
 
