@@ -45,7 +45,7 @@ const Profile = () => {
           return;
         }
        // console.log(localStorage)
-        //const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
+       // const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
         const response = await axios.get(`${API_URL}/user?username=${username}`);
         const user = response.data;
        // console.log('User data:', user);
@@ -66,12 +66,7 @@ const Profile = () => {
   }, []);
 
   const handleEditChange = (field: string, value: string) => {
-    console.log('Modification du champ:', field, 'avec la valeur:', value);
-    setEditedProfile((prev) => {
-      const newProfile = { ...prev, [field]: value };
-      console.log('Nouveau profil édité:', newProfile);
-      return newProfile;
-    });
+    setEditedProfile((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
@@ -88,37 +83,26 @@ const Profile = () => {
         return;
       }
 
-      console.log('Données à mettre à jour:', editedProfile);
-
       // Préparer les données à mettre à jour
       const updatedData = {
         username: username,
-        name: editedProfile.name !== undefined ? editedProfile.name : profile.name,
-        phone: editedProfile.phone !== undefined ? editedProfile.phone : profile.phone,
-        description: editedProfile.description !== undefined ? editedProfile.description : profile.description,
+        name: editedProfile.name || profile.name,
+        phone: editedProfile.phone || profile.phone,
+        description: editedProfile.description || profile.description,
         profile_picture_url: profile.avatar
       };
 
-      console.log('Données envoyées au serveur:', updatedData);
-
       // Envoyer les modifications au backend
       //const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
-      const response = await axios.put(`${API_URL}/update-user`, updatedData);
-
-      console.log('Réponse du serveur:', response.data);
+       const response = await axios.put(`${API_URL}/update-user`, updatedData);
 
       if (response.data.status === "success") {
         // Mettre à jour l'état local avec les nouvelles données
-        const newProfile = {
+        setProfile({
           ...profile,
-          name: updatedData.name,
-          phone: updatedData.phone,
-          description: updatedData.description,
-          avatar: updatedData.profile_picture_url
-        };
-
-        console.log('Nouveau profil:', newProfile);
-        setProfile(newProfile);
+          ...updatedData,
+          avatar: profile.avatar // Conserver l'URL de l'avatar
+        });
 
         toast({
           title: "Profil mis à jour",
@@ -154,69 +138,47 @@ const Profile = () => {
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        try {
-          if (!reader.result) {
-            throw new Error("Échec de la lecture du fichier");
-          }
-
-          const base64Data = reader.result.toString().split(',')[1];
-          const username = localStorage.getItem('username');
-          
-          if (!username) {
-            toast({
-              title: "Erreur",
-              description: "Utilisateur non connecté",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          console.log('Envoi de la photo...');
-          const response = await axios.post(`${API_URL}/update-profile-picture`, {
-            username: username,
-            file_data: base64Data
-          });
-
-          console.log('Réponse du serveur:', response.data);
-
-          if (response.data.status === "success") {
-            // Mettre à jour l'état local avec la nouvelle URL de la photo
-            setProfile(prev => ({
-              ...prev,
-              avatar: response.data.profile_picture_url
-            }));
-
-            toast({
-              title: "Photo de profil mise à jour",
-              description: "Votre photo de profil a été modifiée avec succès",
-            });
-          } else {
-            throw new Error("La mise à jour de la photo a échoué");
-          }
-        } catch (error) {
-          console.error("Erreur lors de l'envoi de la photo:", error);
+        const base64Data = (reader.result as string).split(',')[1];
+        const username = localStorage.getItem('username');
+        
+        if (!username) {
           toast({
             title: "Erreur",
-            description: "Impossible de mettre à jour la photo de profil",
+            description: "Utilisateur non connecté",
             variant: "destructive",
           });
+          return;
+        }
+
+        // Envoyer la nouvelle photo au backend
+        //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
+       // const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
+         const response = await axios.post(`${API_URL}/update-profile-picture`, {
+          username: username,
+          file_data: base64Data
+        });
+
+        if (response.data.status === "success") {
+          // Mettre à jour l'état local avec la nouvelle URL de la photo
+          setProfile(prev => ({
+            ...prev,
+            avatar: response.data.profile_picture_url
+          }));
+
+          toast({
+            title: "Photo de profil mise à jour",
+            description: "Votre photo de profil a été modifiée avec succès",
+          });
+        } else {
+          throw new Error("La mise à jour de la photo a échoué");
         }
       };
-
-      reader.onerror = () => {
-        toast({
-          title: "Erreur",
-          description: "Impossible de lire le fichier",
-          variant: "destructive",
-        });
-      };
-
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Erreur lors de la lecture du fichier:", error);
+      console.error("Erreur lors de la mise à jour de la photo de profil:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de traiter la photo",
+        description: "Impossible de mettre à jour la photo de profil",
         variant: "destructive",
       });
     }
