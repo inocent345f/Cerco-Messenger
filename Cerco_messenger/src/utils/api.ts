@@ -102,4 +102,3 @@ export const verifyOtp = async (data: { email: string; token: string; type: stri
     }
   }
 };
-
