@@ -17,6 +17,7 @@ interface ProfileFormProps {
   onEditChange: (field: string, value: string) => void;
   onSave: () => void;
   onCancel: () => void;
+  isMobile: boolean;
 }
 
 export const ProfileForm = ({
@@ -25,16 +26,17 @@ export const ProfileForm = ({
   editedProfile,
   onEditChange,
   onSave,
-  onCancel
+  onCancel,
+  isMobile
 }: ProfileFormProps) => {
   if (!isEditing) {
     return (
       <div className="space-y-4">
-        <div className="bg-accent/50 rounded-lg p-4">
+        <div className={`bg-accent/50 rounded-lg ${isMobile ? 'p-3' : 'p-4'}`}>
           <p className="text-sm font-medium text-muted-foreground">Téléphone</p>
           <p className="text-foreground mt-1">{profile.phone || "Non renseigné"}</p>
         </div>
-        <div className="bg-accent/50 rounded-lg p-4">
+        <div className={`bg-accent/50 rounded-lg ${isMobile ? 'p-3' : 'p-4'}`}>
           <p className="text-sm font-medium text-muted-foreground">Description</p>
           <p className="text-foreground mt-1">{profile.description || "Aucune description"}</p>
         </div>
@@ -43,41 +45,51 @@ export const ProfileForm = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${isMobile ? 'px-2' : ''}`}>
       <div>
         <label className="text-sm font-medium text-muted-foreground">Nom</label>
         <Input
-          value={editedProfile.name ?? profile.name}
-          onChange={(e) => onEditChange("name", e.target.value)}
+          value={editedProfile.name !== undefined ? editedProfile.name : profile.name}
+          onChange={(e) => {
+            console.log('Changement du nom:', e.target.value);
+            onEditChange("name", e.target.value);
+          }}
           placeholder="Votre nom"
-          className="mt-1"
+          className={`mt-1 ${isMobile ? 'text-sm' : ''}`}
         />
       </div>
       <div>
         <label className="text-sm font-medium text-muted-foreground">Téléphone</label>
         <Input
-          value={editedProfile.phone ?? profile.phone}
-          onChange={(e) => onEditChange("phone", e.target.value)}
+          value={editedProfile.phone !== undefined ? editedProfile.phone : profile.phone}
+          onChange={(e) => {
+            console.log('Changement du téléphone:', e.target.value);
+            onEditChange("phone", e.target.value);
+          }}
           placeholder="Votre numéro de téléphone"
-          className="mt-1"
+          className={`mt-1 ${isMobile ? 'text-sm' : ''}`}
+          type="tel"
         />
       </div>
       <div>
         <label className="text-sm font-medium text-muted-foreground">Description</label>
         <Textarea
-          value={editedProfile.description ?? profile.description}
-          onChange={(e) => onEditChange("description", e.target.value)}
+          value={editedProfile.description !== undefined ? editedProfile.description : profile.description}
+          onChange={(e) => {
+            console.log('Changement de la description:', e.target.value);
+            onEditChange("description", e.target.value);
+          }}
           placeholder="Décrivez-vous en quelques mots"
-          className="mt-1 h-32"
+          className={`mt-1 ${isMobile ? 'h-24 text-sm' : 'h-32'}`}
         />
       </div>
-      <div className="flex gap-2 pt-4">
+      <div className={`flex gap-2 ${isMobile ? 'pt-2' : 'pt-4'}`}>
         <Button onClick={onSave} className="flex-1">
-          <Check className="h-4 w-4 mr-2" />
+          <Check className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
           Enregistrer
         </Button>
         <Button variant="outline" onClick={onCancel} className="flex-1">
-          <X className="h-4 w-4 mr-2" />
+          <X className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
           Annuler
         </Button>
       </div>
