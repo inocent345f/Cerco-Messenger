@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -21,6 +22,7 @@ interface UserProfile {
 
 const Profile = () => {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<UserProfile>({
     id: "default-id",
     username: "default-username",
@@ -43,7 +45,7 @@ const Profile = () => {
           return;
         }
        // console.log(localStorage)
-       //const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
+        //const response = await axios.get(`http://127.0.0.1:8000/user?username=${username}`);
         const response = await axios.get(`${API_URL}/user?username=${username}`);
         const user = response.data;
        // console.log('User data:', user);
@@ -52,6 +54,7 @@ const Profile = () => {
           name: user.name ? user.name : "Utilisateur",
           phone: user.phone || "default-phone",
           description: user.description || "default-description",
+          avatar: user.profile_picture_url, // Utiliser l'URL de la photo de profil
           online: true,
         });
       } catch (error) {
@@ -63,7 +66,12 @@ const Profile = () => {
   }, []);
 
   const handleEditChange = (field: string, value: string) => {
-    setEditedProfile((prev) => ({ ...prev, [field]: value }));
+    console.log('Modification du champ:', field, 'avec la valeur:', value);
+    setEditedProfile((prev) => {
+      const newProfile = { ...prev, [field]: value };
+      console.log('Nouveau profil édité:', newProfile);
+      return newProfile;
+    });
   };
 
   const handleSave = async () => {
@@ -80,26 +88,37 @@ const Profile = () => {
         return;
       }
 
+      console.log('Données à mettre à jour:', editedProfile);
+
       // Préparer les données à mettre à jour
       const updatedData = {
         username: username,
-        name: editedProfile.name || profile.name,
-        phone: editedProfile.phone || profile.phone,
-        description: editedProfile.description || profile.description,
+        name: editedProfile.name !== undefined ? editedProfile.name : profile.name,
+        phone: editedProfile.phone !== undefined ? editedProfile.phone : profile.phone,
+        description: editedProfile.description !== undefined ? editedProfile.description : profile.description,
         profile_picture_url: profile.avatar
       };
+
+      console.log('Données envoyées au serveur:', updatedData);
 
       // Envoyer les modifications au backend
       //const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
       const response = await axios.put(`${API_URL}/update-user`, updatedData);
 
+      console.log('Réponse du serveur:', response.data);
+
       if (response.data.status === "success") {
         // Mettre à jour l'état local avec les nouvelles données
-        setProfile({
+        const newProfile = {
           ...profile,
-          ...updatedData,
-          avatar: profile.avatar // Conserver l'URL de l'avatar
-        });
+          name: updatedData.name,
+          phone: updatedData.phone,
+          description: updatedData.description,
+          avatar: updatedData.profile_picture_url
+        };
+
+        console.log('Nouveau profil:', newProfile);
+        setProfile(newProfile);
 
         toast({
           title: "Profil mis à jour",
@@ -135,47 +154,94 @@ const Profile = () => {
     try {
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64Data = (reader.result as string).split(',')[1];
-        const username = localStorage.getItem('username');
-        
-        if (!username) {
+        try {
+          if (!reader.result) {
+            throw new Error("Échec de la lecture du fichier");
+          }
+
+          const base64Data = reader.result.toString().split(',')[1];
+          const username = localStorage.getItem('username');
+          const token = localStorage.getItem('accessToken');
+          
+          console.log('Informations d\'authentification:', {
+            hasUsername: !!username,
+            hasToken: !!token,
+            fileType: file.type,
+            fileSize: file.size
+          });
+
+          if (!username || !token) {
+            toast({
+              title: "Erreur",
+              description: "Utilisateur non connecté",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          console.log('Envoi de la photo...');
+          const response = await axios.post(`${API_URL}/update-profile-picture`, {
+            username: username,
+            file_data: base64Data
+          }, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+
+          console.log('Réponse du serveur:', response.data);
+
+          if (response.data.status === "success") {
+            // Mettre à jour l'état local avec la nouvelle URL de la photo
+            setProfile(prev => ({
+              ...prev,
+              avatar: response.data.profile_picture_url
+            }));
+
+            toast({
+              title: "Photo de profil mise à jour",
+              description: "Votre photo de profil a été modifiée avec succès",
+            });
+          } else {
+            console.error('Échec de la mise à jour:', response.data);
+            throw new Error("La mise à jour de la photo a échoué");
+          }
+        } catch (error) {
+          console.error("Erreur détaillée lors de l'envoi de la photo:", {
+            error,
+            response: error.response?.data,
+            status: error.response?.status
+          });
+          
+          let errorMessage = "Impossible de mettre à jour la photo de profil";
+          if (error.response?.data?.detail) {
+            errorMessage = error.response.data.detail;
+          }
+          
           toast({
             title: "Erreur",
-            description: "Utilisateur non connecté",
+            description: errorMessage,
             variant: "destructive",
           });
-          return;
-        }
-
-        // Envoyer la nouvelle photo au backend
-        //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
-        //const response = await axios.post("http://127.0.0.1:8000/update-profile-picture", {
-        const response = await axios.post(`${API_URL}/update-profile-picture`, {
-          username: username,
-          file_data: base64Data
-        });
-
-        if (response.data.status === "success") {
-          // Mettre à jour l'état local avec la nouvelle URL de la photo
-          setProfile(prev => ({
-            ...prev,
-            avatar: response.data.profile_picture_url
-          }));
-
-          toast({
-            title: "Photo de profil mise à jour",
-            description: "Votre photo de profil a été modifiée avec succès",
-          });
-        } else {
-          throw new Error("La mise à jour de la photo a échoué");
         }
       };
+
+      reader.onerror = (error) => {
+        console.error("Erreur lors de la lecture du fichier:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de lire le fichier",
+          variant: "destructive",
+        });
+      };
+
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de la photo de profil:", error);
+      console.error("Erreur lors de la lecture du fichier:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour la photo de profil",
+        description: "Impossible de traiter la photo",
         variant: "destructive",
       });
     }
@@ -237,7 +303,7 @@ const Profile = () => {
       <ProfileHeader />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="px-6 pb-20 max-w-2xl mx-auto w-full">
+        <div className={`px-4 md:px-6 pb-20 mx-auto w-full ${isMobile ? 'max-w-full' : 'max-w-2xl'}`}>
           <div className="flex justify-end mt-4">
             <Button
               variant="ghost"
@@ -260,6 +326,7 @@ const Profile = () => {
             onAvatarChange={handleAvatarChange}
             onAvatarRemove={handleAvatarRemove}
             isEditing={isEditing}
+            isMobile={isMobile}
           />
 
           <div className="mt-8 space-y-6">
@@ -278,6 +345,7 @@ const Profile = () => {
                 setIsEditing(false);
                 setEditedProfile({});
               }}
+              isMobile={isMobile}
             />
           </div>
         </div>
