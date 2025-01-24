@@ -102,10 +102,10 @@ const Profile = () => {
       console.log('Données envoyées au serveur:', updatedData);
 
       // Envoyer les modifications au backend
-      //const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
+     // const response = await axios.put(`http://127.0.0.1:8000/update-user`, updatedData);
       const response = await axios.put(`${API_URL}/update-user`, updatedData);
 
-      console.log('Réponse du serveur:', response.data);
+      //console.log('Réponse du serveur:', response.data);
 
       if (response.data.status === "success") {
         // Mettre à jour l'état local avec les nouvelles données
@@ -163,6 +163,7 @@ const Profile = () => {
           const username = localStorage.getItem('username');
           const token = localStorage.getItem('accessToken');
           
+
           console.log('Informations d\'authentification:', {
             hasUsername: !!username,
             hasToken: !!token,
@@ -183,14 +184,15 @@ const Profile = () => {
           const response = await axios.post(`${API_URL}/update-profile-picture`, {
             username: username,
             file_data: base64Data
-          }, {
+          }, 
+          {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             }
           });
-
-          console.log('Réponse du serveur:', response.data);
+          // console.log(response);
+         // console.log('Réponse du serveur:', response.data);
 
           if (response.data.status === "success") {
             // Mettre à jour l'état local avec la nouvelle URL de la photo
@@ -269,8 +271,8 @@ const Profile = () => {
       }
 
       // Envoyer la requête de suppression au backend
-      //const response = await axios.delete("http://127.0.0.1:8000/remove-profile-picture", {
-      const response = await axios.delete(`${API_URL}/remove-profile-picture`, {
+      const response = await axios.delete("http://127.0.0.1:8000/remove-profile-picture", {
+      //const response = await axios.delete(`${API_URL}/remove-profile-picture`, {
         data: { username }
       });
 
