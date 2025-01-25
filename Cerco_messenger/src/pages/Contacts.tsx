@@ -24,24 +24,34 @@ const Contacts = () => {
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
-    // Récupérer tous les utilisateurs
-    const users: User[] = [];
-    try {
-      const userData = getUsers().then((response) => {
-        response.forEach((item) => {
-          if (item.id !== currentUser.id) {
-            users.push(item);
-          }
-        });
-        setAllUsers(users);
-      });
-    } catch (e) {
-      console.error("Erreur lors de la lecture des données utilisateur:", e);
-    }
+    const fetchUsers = async () => {
+      try {
+        // Récupérer l'username de l'utilisateur actuel
+        const currentUsername = localStorage.getItem('username');
+        if (!currentUsername) {
+          console.error('Utilisateur non connecté');
+          return;
+        }
 
-    // Récupérer les contacts de l'utilisateur
-    const userContacts = JSON.parse(localStorage.getItem(`contacts_${currentUser.id}`) || "[]");
-    setContacts(userContacts);
+        // Récupérer tous les utilisateurs sauf l'utilisateur actuel
+        const response = await getUsers();
+        const filteredUsers = response.filter(user => user.username !== currentUsername);
+        setAllUsers(filteredUsers);
+
+        // Récupérer les contacts de l'utilisateur
+        const userContacts = JSON.parse(localStorage.getItem(`contacts_${currentUser.id}`) || "[]");
+        setContacts(userContacts);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des utilisateurs:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger la liste des utilisateurs",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchUsers();
   }, []);
 
   const addContact = (user: User) => {
@@ -108,16 +118,15 @@ const Contacts = () => {
                 <div
                   key={contact.id}
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer"
-                  onClick={() => viewProfile(contact.id)}
+                  onClick={() => startChat(contact.id)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>{contact.username[0]}</AvatarFallback>
+                      <AvatarFallback>{contact.name ? contact.name[0] : contact.username[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-medium">{contact.username}</h3>
-                      <p className="text-sm text-muted-foreground">{contact.name}</p>
+                      <h3 className="font-medium">{contact.name || contact.username}</h3>
                     </div>
                   </div>
                   <Button variant="ghost" onClick={(e) => {
@@ -142,16 +151,16 @@ const Contacts = () => {
                 <div
                   key={user.id}
                   className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer"
-                  onClick={() => viewProfile(user.id)}
+                  //onClick={() => viewProfile(user.id)}
+                  onClick={() => startChat(user.id)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>{user.username[0]}</AvatarFallback>
+                      <AvatarFallback>{user.name ? user.name[0] : user.username[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-medium">{user.username}</h3>
-                      <p className="text-sm text-muted-foreground">{user.name}</p>
+                      <h3 className="font-medium">{user.name || user.username}</h3>
                     </div>
                   </div>
                   <div className="flex gap-2">
