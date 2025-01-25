@@ -13,6 +13,7 @@ interface User {
   username: string;
   name: string;
   status?: string;
+  profile_picture_url?: string;
 }
 
 const Contacts = () => {
@@ -82,6 +83,7 @@ const Contacts = () => {
   const viewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
   };
+  
 
   return (
     <div className="h-screen overflow-y-auto bg-background">
@@ -117,13 +119,13 @@ const Contacts = () => {
               {filteredUsers(contacts).map((contact) => (
                 <div
                   key={contact.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer focus:outline-none"
                   onClick={() => startChat(contact.id)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>{contact.name ? contact.name[0] : contact.username[0]}</AvatarFallback>
+                      <AvatarImage src={contact.profile_picture_url} alt={`${contact.name}'s profile`} />
+                      <AvatarFallback>{contact.name ? contact.name.charAt(0).toUpperCase() : contact.username.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="font-medium">{contact.name || contact.username}</h3>
@@ -150,14 +152,14 @@ const Contacts = () => {
               {filteredUsers(allUsers).map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-accent cursor-pointer focus:outline-none"
                   //onClick={() => viewProfile(user.id)}
                   onClick={() => startChat(user.id)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>{user.name ? user.name[0] : user.username[0]}</AvatarFallback>
+                      <AvatarImage src={user.profile_picture_url} alt={`${user.name}'s profile`} />
+                      <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <div>
                       <h3 className="font-medium">{user.name || user.username}</h3>
