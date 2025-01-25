@@ -14,6 +14,7 @@ interface User {
   id: string;
   username: string;
   name: string;
+  profile_picture_url?: string;
 }
 
 const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
@@ -82,17 +83,14 @@ const ChatList = ({ onSelectChat, selectedChat }: ChatListProps) => {
             >
               <div className="relative">
                 <Avatar>
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback>{contact.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={contact.profile_picture_url} alt={`${contact.name}'s profile`} />
+                  <AvatarFallback>{contact.name ? contact.name.charAt(0).toUpperCase() : contact.username.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <OnlineStatus online={false} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-baseline">
-                  <h3 className="font-medium truncate">{contact.username}</h3>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-muted-foreground truncate">{contact.name}</p>
+                  <h3 className="font-medium truncate">{contact.name}</h3>
                 </div>
               </div>
             </div>
