@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Message from "./Message";
-import MessageInput from "./MessageInput";
+import Message from "@/components/Message";
+import MessageInput from "@/components/MessageInput";
 import { ArrowLeft, Phone, Video, MoreVertical, Star, Archive, Delete, Ban, Flag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,10 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { getMessages, sendMessage } from "@/utils/api";
+import { getMessages, sendMessage, getUserIdByUsername, getChatId, getUserByUsername } from "@/utils/api";
 
+// Définition des interfaces pour les props et les messages
 interface ChatWindowProps {
-  chatId: string;
+  selectedChatUser: { username: string; name: string; profile_picture_url?: string } | null;
   onBack: () => void;
 }
 
@@ -26,90 +27,154 @@ interface MessageType {
   text: string;
   sent: boolean;
   timestamp: number;
+  profile_picture_url?: string;
 }
 
-const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
+// Composant principal de la fenêtre de chat
+const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
+ // console.log("Détails de l'utilisateur sélectionné dans ChatWindow:", selectedChatUser);
+  //console.log("Détails de l'utilisateur sélectionné dans ChatWindow:", selectedChatUser);
   const [messages, setMessages] = useState<MessageType[]>([]);
-  const [chatUser, setChatUser] = useState<any>(null);
+  const [chatId, setChatId] = useState<string | null>(null);
+  console.log(chatId)
+  const [chatUser, setChatUser] = useState<{ username: string; name: string; profile_picture_url?: string } | null>(selectedChatUser ? { username: selectedChatUser.username, name: selectedChatUser.name, profile_picture_url: selectedChatUser.profile_picture_url } : null);
+  console.log("les détail sur l'utilisateur selectionné",selectedChatUser);
+  const [currentUser, setCurrentUser] = useState<any>(JSON.parse(localStorage.getItem("user") || "{}"));
+ // console.log("les détail sur l'utilisateur connecté",currentUser);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const username = localStorage.getItem('username');
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const fetchedMessages = await getMessages(chatId);
-        console.log("Fetched messages:", fetchedMessages); // Log des messages récupérés
-        
-        const formattedMessages = fetchedMessages.map((msg: any) => ({
-          id: msg.id,
-          text: msg.text,
-          sent: msg.senderId === currentUser.id,
-          timestamp: msg.timestamp
-        }));
-        
-        setMessages(formattedMessages);
-      } catch (error) {
-        console.error("Erreur lors du chargement des messages:", error); // Log de l'erreur
-        toast({
-          variant: "destructive",
-          title: "Erreur",
-          description: "Impossible de charger les messages",
-        });
+    const fetchCurrentUser = async () => {
+      const username = localStorage.getItem('username'); // Récupérer le nom d'utilisateur actuel
+      console.log(username)
+      const userProfile = await getUserByUsername(username); // Récupérer les détails de l'utilisateur
+      setCurrentUser(userProfile); // Mettre à jour l'état avec les détails de l'utilisateur
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Effet pour établir la connexion WebSocket
+  useEffect(() => {
+    const socket = new WebSocket(`ws://localhost:8000/ws/${chatId}`);
+
+    socket.onmessage = (event) => {
+      const newMessage = JSON.parse(event.data);
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, [chatId]);
+
+  // Effet pour récupérer l'ID de chat
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(username, selectedChatUser.username);
+        console.log(currentUser.username)
+        setChatId(chatId); // Mettre à jour l'état avec le chat_id récupéré
+      }
+    };
+    fetchChatId();
+  }, [chatUser]);
+
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(currentUser.username, selectedChatUser.username);
+        setChatId(chatId);
       }
     };
 
-    const userData = localStorage.getItem(`user_${chatId}`);
-    if (userData) {
-      setChatUser(JSON.parse(userData));
-    }
+    fetchChatId();
+  }, [selectedChatUser]);
+
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(currentUser.username, selectedChatUser.username);
+        setChatId(chatId);
+      }
+    };
+
+    fetchChatId();
+  }, [selectedChatUser]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (chatId) {
+        const fetchedMessages = await getMessages(chatId);
+        setMessages(fetchedMessages);
+      }
+    };
 
     fetchMessages();
-  }, [chatId, toast, currentUser.id]);
+  }, [chatId, selectedChatUser]);
 
-  const handleSendMessage = async (text: string) => {
-    try {
-      const response = await fetch(`${API_URL}/messages`, {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        credentials: "include",
-        body: JSON.stringify({ receiverId: chatId, text })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'envoi du message');
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (chatId) {
+        const fetchedMessages = await getMessages(chatId);
+        setMessages(fetchedMessages);
       }
+    };
 
-      const responseData = await response.json();
-      console.log("Message sent response:", responseData); // Log de la réponse de l'envoi du message
+    fetchMessages();
+  }, [chatId, selectedChatUser]);
 
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(currentUser.username, chatUser.username);
+        setChatId(chatId);
+      }
+    };
+
+    fetchChatId();
+  }, [selectedChatUser]);
+
+  // Fonction pour envoyer un message
+  const handleSendMessage = async (messageContent: string) => {
+    try {
+      if (!chatUser || !chatUser.username) {
+        throw new Error("Utilisateur non connecté");
+      }
+      const receiverId = await getUserIdByUsername(chatUser.username);
+
+      // Afficher le message dans le chat avant l'envoi
       const newMessage = {
-        id: responseData.id,
-        text,
+        id: String(Date.now()), // Convertir en string
+        text: messageContent,
         sent: true,
         timestamp: Date.now()
       };
-      
       setMessages(prev => [...prev, newMessage]);
+
+      const message = { receiverId, text: messageContent };
+      const response = await sendMessage(message);
+      if (response.success) {
+        // Optionnel : mettre à jour le message avec l'ID réel si nécessaire
+      } else {
+        toast({ title: "Erreur", description: "Échec de l'envoi du message." });
+      }
     } catch (error) {
-      console.error("Erreur lors de l'envoi du message:", error); // Log de l'erreur
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible d'envoyer le message",
-      });
+      console.error("Erreur lors de l'envoi du message:", error);
+      toast({ title: "Erreur", description: "Échec de l'envoi du message." });
     }
   };
 
+  // Fonction pour supprimer un message
   const handleDeleteMessage = (messageId: string) => {
     const updatedMessages = messages.filter((msg) => msg.id !== messageId);
     setMessages(updatedMessages);
     localStorage.setItem(`messages_${chatId}`, JSON.stringify(updatedMessages));
   };
 
+  // Fonction pour archiver la conversation
   const handleArchiveChat = () => {
     toast({
       title: "Chat archivé",
@@ -117,6 +182,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     });
   };
 
+  // Fonction pour enregistrer un message
   const handleStarMessage = () => {
     toast({
       title: "Message enregistré",
@@ -124,6 +190,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     });
   };
 
+  // Fonction pour bloquer l'utilisateur
   const handleBlockUser = () => {
     toast({
       title: "Utilisateur bloqué",
@@ -131,6 +198,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     });
   };
 
+  // Fonction pour signaler l'utilisateur
   const handleReportUser = () => {
     toast({
       title: "Utilisateur signalé",
@@ -138,6 +206,7 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     });
   };
 
+  // Fonction pour supprimer la conversation
   const handleDeleteChat = () => {
     localStorage.removeItem(`messages_${chatId}`);
     toast({
@@ -147,24 +216,41 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
     navigate("/");
   };
 
+  // Effet pour récupérer les détails de l'utilisateur sélectionné
+  useEffect(() => {
+    const userData = localStorage.getItem(`user_${chatId}`);
+    if (userData) {
+      setChatUser(JSON.parse(userData));
+    }
+  }, [chatId]);
+
+  // Affichage de la fenêtre de chat
   return (
     <div className="h-full flex flex-col bg-background">
+      {/* En-tête de la fenêtre de chat */}
       <div className="p-4 border-b border-border flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="md:hidden">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback>{chatUser?.username?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="font-medium">{chatUser?.username}</h2>
-              <span className="text-sm text-green-500">{chatUser?.username} - En ligne</span>
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        {/* Affichage de l'avatar de l'utilisateur sélectionné */}
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10">
+            {/* Image de l'avatar ou fallback si l'image n'est pas disponible */}
+            <AvatarImage src={selectedChatUser?.profile_picture_url} />
+            <AvatarFallback>{selectedChatUser?.name.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+
+          {/* Affichage du nom de l'utilisateur sélectionné */}
+          <div>
+            <h2 className="font-medium">{selectedChatUser?.name}</h2> {/* Affiche le nom de l'utilisateur sélectionné */}
+              <span className="text-sm text-green-500">{selectedChatUser?.username} - En ligne</span>
             </div>
           </div>
         </div>
+
+        {/* Boutons d'actions */}
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="hidden md:inline-flex">
             <Video className="h-5 w-5" />
@@ -205,22 +291,29 @@ const ChatWindow = ({ chatId, onBack }: ChatWindowProps) => {
           </DropdownMenu>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            Aucun message. Commencez la conversation !
-          </div>
-        ) : (
-          messages.map((message) => (
-            <Message
-              key={message.id}
-              {...message}
-              onDelete={handleDeleteMessage}
-            />
-          ))
-        )}
+
+      {/* Corps de la fenêtre de chat */}
+      <div className="flex flex-col h-screen"> 
+        <div className="flex-1 overflow-y-auto">
+          {/* Affichage des messages */}
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              Aucun message. Commencez la conversation !
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div key={index} className={`flex justify-${message.sent ? 'end' : 'start'} mb-4`}>
+                <div className={`bg-${message.sent ? 'primary' : 'secondary'} rounded-lg p-4 max-w-md`}>
+                  {message.text}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Champ de saisie pour envoyer un message */}
+        <MessageInput onSendMessage={handleSendMessage} />
       </div>
-      <MessageInput onSendMessage={handleSendMessage} />
     </div>
   );
 };
