@@ -1,146 +1,326 @@
-import axios from "axios";
+import { useState, useEffect } from "react";
+import Message from "@/components/Message";
+import MessageInput from "@/components/MessageInput";
+import { ArrowLeft, Phone, Video, MoreVertical, Star, Archive, Delete, Ban, Flag } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
+import { getMessages, sendMessage, getUserIdByUsername, getChatId, getUserByUsername } from "@/utils/api";
 
-// L'URL de l'API est stockée dans un fichier .env ou dans les variables d'environnement
-const API_URL = import.meta.env.VITE_API_URL;
-
-interface User {
-  id: string;
-  username: string;
-  name?: string;
-  created_at?: string;
-  email?: string;
+// Définition des interfaces pour les props et les messages
+interface ChatWindowProps {
+  selectedChatUser: { username: string; name: string; profile_picture_url?: string } | null;
+  onBack: () => void;
 }
 
-interface message {
+interface MessageType {
   id: string;
-  created_at?: string;
-  chat_id?: string;
-  message?: string;
-  username?: string;
+  text: string;
+  sent: boolean;
+  timestamp: number;
+  profile_picture_url?: string;
 }
 
-const headers = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
+// Composant principal de la fenêtre de chat
+const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
+ // console.log("Détails de l'utilisateur sélectionné dans ChatWindow:", selectedChatUser);
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [chatUser, setChatUser] = useState<{ username: string; name: string; profile_picture_url?: string } | null>(selectedChatUser ? { username: selectedChatUser.username, name: selectedChatUser.name, profile_picture_url: selectedChatUser.profile_picture_url } : null);
+  //console.log("les détail sur l'utilisateur selectionné",selectedChatUser);
+  //const [currentUser, setCurrentUser] = useState<any>(JSON.parse(localStorage.getItem("user") || "{}"));
+ // console.log("les détail sur l'utilisateur connecté",currentUser);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const username = localStorage.getItem('username');
+  const [messageContent, setMessageContent] = useState('');
 
-// Fonction pour enregistrer un utilisateur
-export const registerUser = async (userData: { username: string; email: string; password: string }) => {
-  try {
-    const response = await axios.post(`${API_URL}/register`, userData);
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement:', error);
-    throw new Error(error.response?.data?.detail || 'Erreur lors de l\'enregistrement');
-  }
-};
+  // useEffect(() => {
+  //   const fetchCurrentUser = async () => {
+  //     const username = localStorage.getItem('username'); // Récupérer le nom d'utilisateur actuel
+  //     console.log(username)
+  //   //   const userProfile = await getUserByUsername(username); // Récupérer les détails de l'utilisateur
+  //   //   setCurrentUser(userProfile); // Mettre à jour l'état avec les détails de l'utilisateur
+  //   };
 
-// Fonction pour se connecter
-export const loginUser = async (userData: { username: string; password: string }) => {
-  try {
-    const response = await axios.post(`${API_URL}/login`, {
-      username: userData.username,
-      password: userData.password,
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Erreur lors de la connexion:", error);
-    throw new Error(error.response?.data?.detail || "Une erreur est survenue lors de la connexion.");
-  }
-};
+  //   fetchCurrentUser();
+  // }, []);
 
-// Fonction pour récupérer la liste des utilisateurs
-export const getUsers = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/users`);
-    return response.data;
-  } catch (error) {
-    console.error('Erreur dans la récupération des utilisateurs:', error);
-    throw new Error(error.response?.data?.detail || 'Une erreur est survenue lors de la récupération des utilisateurs');
-  }
-};
+  // Effet pour établir la connexion WebSocket
+  useEffect(() => {
+    const socket = new WebSocket(`ws://localhost:8000/ws/${chatId}`);
 
+    socket.onmessage = (event) => {
+      const newMessage = JSON.parse(event.data);
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    };
 
-// Fonction pour vérifier l'OTP (One Time Password)
-export const verifyOtp = async (data: { email: string; token: string; type: string }) => {
-  try {
-    const response = await axios.post(`${API_URL}/verify-otp`, data);
-    return response.data;
-  } catch (error) {
-    console.error('Erreur dans la vérification OTP:', error);
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.detail || "Erreur lors de la vérification OTP");
-    } else {
-      throw new Error("Une erreur réseau est survenue");
+    return () => {
+      socket.close();
+    };
+  }, [chatId]);
+
+  // Effet pour récupérer le chatID de chat
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(username, selectedChatUser.username);
+        console.log(username)
+        setChatId(chatId); // Mettre à jour l'état avec le chat_id récupéré
+      }
+    };
+    fetchChatId();
+  }, [chatUser]);
+
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(username, selectedChatUser.username);
+        setChatId(chatId);
+      }
+    };
+
+    fetchChatId();
+  }, [selectedChatUser]);
+
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(username, selectedChatUser.username);
+        setChatId(chatId);
+      }
+    };
+
+    fetchChatId();
+  }, [selectedChatUser]);
+
+  useEffect(() => {
+    const fetchChatId = async () => {
+      if (chatUser) {
+        const chatId = await getChatId(username, chatUser.username);
+        setChatId(chatId);
+      }
+    };
+
+    fetchChatId();
+  }, [selectedChatUser]);
+
+  // ---------------------------------- Récupération et affichage des messages ----------------------------------
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (chatId) {
+        const fetchedMessages = await getMessages(chatId); // Appel à la fonction pour récupérer les messages
+        setMessages(fetchedMessages); // Mettre à jour l'état avec les messages récupérés
+      }
+    };
+
+    fetchMessages();
+  }, [chatId, selectedChatUser]);
+  // ----------------------------------------------------------------------------------------------------------
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (chatId) {
+        const fetchedMessages = await getMessages(chatId);
+        setMessages(fetchedMessages);
+      }
+    };
+
+    fetchMessages();
+  }, [chatId, selectedChatUser]);
+
+  // Fonction pour envoyer un message
+  const handleSendMessage = async () => {
+    try {
+        if (!chatUser || !chatUser.username) {
+            throw new Error("Utilisateur non connecté");
+        }
+
+        // Récupérez l'ID de l'utilisateur actuel
+        const senderUsername = localStorage.getItem('username');
+        const receiverUsername = selectedChatUser.username; // Nom d'utilisateur du destinataire
+
+        // Envoyer le message via l'API
+        const response = await sendMessage(messageContent, senderUsername, receiverUsername);
+        
+        // Optionnel : Vous pouvez ajouter le message à l'état local si nécessaire
+        const newMessage = {
+            id: response.id, // ID du message renvoyé par l'API 
+            text: messageContent,
+            sent: true,
+            timestamp: new Date(response.created_at).getTime(),
+        };
+        console.log(newMessage);
+
+        setMessages(prev => [...prev, newMessage]); // Mettre à jour l'état avec le nouveau message
+        setMessageContent(''); // Réinitialiser le champ de saisie
+
+    } catch (error) {
+        console.error("Erreur lors de l'envoi du message:", error);
+        toast({ title: "Erreur", description: "Échec de l'envoi du message." });
     }
-  }
 };
 
+  // Fonction pour supprimer un message
+  const handleDeleteMessage = (messageId: string) => {
+    const updatedMessages = messages.filter((msg) => msg.id !== messageId);
+    setMessages(updatedMessages);
+    localStorage.setItem(`messages_${chatId}`, JSON.stringify(updatedMessages));
+  };
 
-// Fonction pour récupérer l'ID d'un utilisateur à partir de son username
-export const getUserIdByUsername = async (username: string) => {
-  const response = await axios.get(`${API_URL}/users?username=${username}`);
-  if (response.data && response.data.length > 0) {
-    return response.data[0].id; // Supposons que l'ID soit dans le premier élément
-  }
-  throw new Error("Utilisateur non trouvé");
+  // Fonction pour archiver la conversation
+  const handleArchiveChat = () => {
+    toast({
+      title: "Chat archivé",
+      description: "Cette conversation a été archivée"
+    });
+  };
+
+  // Fonction pour enregistrer un message
+  const handleStarMessage = () => {
+    toast({
+      title: "Message enregistré",
+      description: "Le message a été ajouté aux favoris"
+    });
+  };
+
+  // Fonction pour bloquer l'utilisateur
+  const handleBlockUser = () => {
+    toast({
+      title: "Utilisateur bloqué",
+      description: "Vous avez bloqué cet utilisateur"
+    });
+  };
+
+  // Fonction pour signaler l'utilisateur
+  const handleReportUser = () => {
+    toast({
+      title: "Utilisateur signalé",
+      description: "Votre signalement a été envoyé"
+    });
+  };
+
+  // Fonction pour supprimer la conversation
+  const handleDeleteChat = () => {
+    localStorage.removeItem(`messages_${chatId}`);
+    toast({
+      title: "Chat supprimé",
+      description: "Cette conversation a été supprimée"
+    });
+    navigate("/");
+  };
+
+  // Effet pour récupérer les détails de l'utilisateur sélectionné
+  useEffect(() => {
+    const userData = localStorage.getItem(`user_${chatId}`);
+    if (userData) {
+      setChatUser(JSON.parse(userData));
+    }
+  }, [chatId]);
+
+  // Affichage de la fenêtre de chat
+  return (
+    <div className="h-full flex flex-col bg-background">
+      {/* En-tête de la fenêtre de chat */}
+      <div className="p-4 border-b border-border flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+        <div className="flex items-center gap-4">
+          <button onClick={onBack} className="md:hidden">
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        {/* Affichage de l'avatar de l'utilisateur sélectionné */}
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10">
+            {/* Image de l'avatar ou fallback si l'image n'est pas disponible */}
+            <AvatarImage src={selectedChatUser?.profile_picture_url} />
+            <AvatarFallback>{selectedChatUser?.name.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+
+          {/* Affichage du nom de l'utilisateur sélectionné */}
+          <div>
+            <h2 className="font-medium">{selectedChatUser?.name}</h2> {/* Affiche le nom de l'utilisateur sélectionné */}
+              <span className="text-sm text-green-500">{selectedChatUser?.username} - En ligne</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Boutons d'actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+            <Video className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+            <Phone className="h-5 w-5" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleStarMessage}>
+                <Star className="mr-2 h-4 w-4" />
+                <span>Enregistrer les messages</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleArchiveChat}>
+                <Archive className="mr-2 h-4 w-4" />
+                <span>Archiver la conversation</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleBlockUser} className="text-red-600">
+                <Ban className="mr-2 h-4 w-4" />
+                <span>Bloquer l'utilisateur</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleReportUser} className="text-yellow-600">
+                <Flag className="mr-2 h-4 w-4" />
+                <span>Signaler l'utilisateur</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDeleteChat} className="text-red-600">
+                <Delete className="mr-2 h-4 w-4" />
+                <span>Supprimer la conversation</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Corps de la fenêtre de chat */}
+      <div className="flex flex-col h-screen"> 
+        <div className="flex-1 overflow-y-auto">
+          {/* Affichage des messages */}
+          <div className="messages-container" style={{ padding: '10px' }}>
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Aucun message. Commencez la conversation !
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div key={index} className={`flex justify-${message.sent ? 'end' : 'start'} mb-4`}>
+                  <div className={`bg-${message.sent ? 'primary' : 'secondary'} rounded-lg p-4 max-w-md`}>
+                    {message.text}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Champ de saisie pour envoyer un message */}
+        <MessageInput onSendMessage={handleSendMessage} setMessageContent={setMessageContent} />
+      </div>
+    </div>
+  );
 };
 
-// Fonction pour récupérer les détails de l'utilisateur par ID
-export const getUserByUsername = async (username: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/user?username=${username}`);
-    return response.data; // Retourner les détails de l'utilisateur
-  } catch (error) {
-    console.error('Erreur lors de la récupération des détails de l\'utilisateur:', error);
-    throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des détails de l\'utilisateur');
-  }
-};
-
-//-------------------------------------------- Messages ---------------------------------------------------------------//
-
-// Fonction pour envoyer un message
-export const sendMessage = async (message: string, user1_id: string, user2_id: string) => {
-  //const response = await axios.post(`http://127.0.0.1:8000/messages/add-chat?message=${
-  const response = await axios.post(`${API_URL}/messages/add-chat?message=${
-    encodeURIComponent(message)}&first_username=${
-      encodeURIComponent(user1_id)}&second_username=${
-        encodeURIComponent(user2_id)}`, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-  });
-  return response.data;
-};
-
-// Fonction pour récupérer le chat_id de deux utilisateurs
-export const getChatId = async (user1_id:string, user2_id: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/get-chat-id?user1_id=${user1_id}&user2_id=${user2_id}`);
-    return response.data; // Retourner le chat_id
-  } catch (error) {
-    console.error('Erreur lors de la récupération du chat_id:', error);
-    throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération du chat_id');
-  }
-};
-
-
-// Fonction pour récupérer les messages
-export const getMessages = async (chatId: string) => {
-  try {
-      const response = await axios.post(`${API_URL}/messages/?chat_id=${chatId}`);
-      return response.data.map(msg => ({
-          id: msg.id,
-          text: msg.message,
-          sent: msg.username === localStorage.getItem('username'), // Détermine si le message a été envoyé par l'utilisateur actuel
-          timestamp: new Date(msg.created_at).getTime() // Convertit la date en timestamp
-      }));
-  } catch (error) {
-      console.error('Erreur lors de la récupération des messages:', error);
-      throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des messages');
-  }
-};
-
-
-//-------------------------------------------------------------------------------------------------------------
+export default ChatWindow;
