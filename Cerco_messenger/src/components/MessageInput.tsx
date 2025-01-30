@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 
 interface MessageInputProps {
   onSendMessage: (text: string) => void;
+  setMessageContent: React.Dispatch<React.SetStateAction<string>>;
   receiverId?: string;
 }
 
-const MessageInput = ({ onSendMessage }: MessageInputProps) => {
+const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, setMessageContent, receiverId }: MessageInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,7 +33,10 @@ const MessageInput = ({ onSendMessage }: MessageInputProps) => {
         <input
           type="text"
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            setMessageContent(e.target.value);
+          }}
           placeholder="Écrivez votre message..."
           className="flex-1 p-2 rounded-full border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
