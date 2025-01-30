@@ -86,31 +86,39 @@ export const getUserIdByUsername = async (username: string) => {
   throw new Error("Utilisateur non trouvé");
 };
 
+// Fonction pour récupérer les détails de l'utilisateur par ID
+export const getUserByUsername = async (username: string) => {
+  try {
+    const response = await axios.get(`${API_URL}/user?username=${username}`);
+    return response.data; // Retourner les détails de l'utilisateur
+  } catch (error) {
+    console.error('Erreur lors de la récupération des détails de l\'utilisateur:', error);
+    throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des détails de l\'utilisateur');
+  }
+};
 
 //-------------------------------------------- Messages ---------------------------------------------------------------//
 
 // Fonction pour envoyer un message
-export const sendMessage = async (message: { receiverId: string; text: string }) => {
-  try {
-    const response = await axios.post(`${API_URL}/messages`, message, {
-      headers,
-      withCredentials: true, // Assurez-vous que le token de session est envoyé
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Erreur dans l\'envoi du message:', error);
-    throw new Error(error.response?.data?.detail || 'Une erreur est survenue lors de l\'envoi du message');
-  }
+export const sendMessage = async (message: string, user1_id: string, user2_id: string) => {
+  //const response = await axios.post(`http://127.0.0.1:8000/messages/add-chat?message=${
+  const response = await axios.post(`${API_URL}/messages/add-chat?message=${
+    encodeURIComponent(message)}&first_username=${
+      encodeURIComponent(user1_id)}&second_username=${
+        encodeURIComponent(user2_id)}`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+  });
+  return response.data;
 };
-
 
 // Fonction pour récupérer le chat_id de deux utilisateurs
 export const getChatId = async (user1_id:string, user2_id: string) => {
-  console.log(user1_id)
   try {
     const response = await axios.get(`${API_URL}/get-chat-id?user1_id=${user1_id}&user2_id=${user2_id}`);
     return response.data; // Retourner le chat_id
-    console.log(response.data)
   } catch (error) {
     console.error('Erreur lors de la récupération du chat_id:', error);
     throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération du chat_id');
@@ -121,25 +129,18 @@ export const getChatId = async (user1_id:string, user2_id: string) => {
 // Fonction pour récupérer les messages
 export const getMessages = async (chatId: string) => {
   try {
-    const response = await axios.post(`${API_URL}/messages/?chat_id=${chatId}`);
-    console.log(chatId)
-    return response.data; // Retourner les messages récupérés
+      const response = await axios.post(`${API_URL}/messages/?chat_id=${chatId}`);
+      return response.data.map(msg => ({
+          id: msg.id,
+          text: msg.message,
+          sent: msg.username === localStorage.getItem('username'), // Détermine si le message a été envoyé par l'utilisateur actuel
+          timestamp: new Date(msg.created_at).getTime() // Convertit la date en timestamp
+      }));
   } catch (error) {
-    console.error('Erreur lors de la récupération des messages:', error);
-    throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des messages');
+      console.error('Erreur lors de la récupération des messages:', error);
+      throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des messages');
   }
 };
 
-// Fonction pour récupérer les détails de l'utilisateur par ID
-export const getUserByUsername = async (username: string) => {
-  try {
-    const response = await axios.get(`${API_URL}/user?username=${username}`);
-    return response.data; // Retourner les détails de l'utilisateur
-    console.log(response)
-  } catch (error) {
-    console.error('Erreur lors de la récupération des détails de l\'utilisateur:', error);
-    throw new Error(error.response?.data?.detail || 'Erreur lors de la récupération des détails de l\'utilisateur');
-  }
-};
 
 //-------------------------------------------------------------------------------------------------------------
