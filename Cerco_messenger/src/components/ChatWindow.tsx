@@ -229,36 +229,128 @@ const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
 
   // Affichage de la fenêtre de chat
   return (
+//     <div className="h-full flex flex-col bg-background">
+//       {/* En-tête de la fenêtre de chat */}
+//       <div className="p-4 border-b border-border flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+//         <div className="flex items-center gap-4">
+//           <button onClick={onBack} className="md:hidden">
+//           <ArrowLeft className="w-6 h-6" />
+//         </button>
+
+//         {/* Affichage de l'avatar de l'utilisateur sélectionné */}
+//         <div className="flex items-center gap-3">
+//           <Avatar className="h-10 w-10">
+//             {/* Image de l'avatar ou fallback si l'image n'est pas disponible */}
+//             <AvatarImage src={selectedChatUser?.profile_picture_url} />
+//             <AvatarFallback>{selectedChatUser?.name.charAt(0).toUpperCase()}</AvatarFallback>
+//           </Avatar>
+
+//           {/* Affichage du nom de l'utilisateur sélectionné */}
+//           <div>
+//             <h2 className="font-medium">{selectedChatUser?.name}</h2> {/* Affiche le nom de l'utilisateur sélectionné */}
+//               <span className="text-sm text-green-500">{selectedChatUser?.username} - En ligne</span>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Boutons d'actions */}
+//         <div className="flex items-center gap-2">
+//           <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+//             <Video className="h-5 w-5" />
+//           </Button>
+//           <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+//             <Phone className="h-5 w-5" />
+//           </Button>
+//           <DropdownMenu>
+//             <DropdownMenuTrigger asChild>
+//               <Button variant="ghost" size="icon">
+//                 <MoreVertical className="h-5 w-5" />
+//               </Button>
+//             </DropdownMenuTrigger>
+//             <DropdownMenuContent align="end" className="w-56">
+//               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+//               <DropdownMenuItem onClick={handleStarMessage}>
+//                 <Star className="mr-2 h-4 w-4" />
+//                 <span>Enregistrer les messages</span>
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={handleArchiveChat}>
+//                 <Archive className="mr-2 h-4 w-4" />
+//                 <span>Archiver la conversation</span>
+//               </DropdownMenuItem>
+//               <DropdownMenuSeparator />
+//               <DropdownMenuItem onClick={handleBlockUser} className="text-red-600">
+//                 <Ban className="mr-2 h-4 w-4" />
+//                 <span>Bloquer l'utilisateur</span>
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={handleReportUser} className="text-yellow-600">
+//                 <Flag className="mr-2 h-4 w-4" />
+//                 <span>Signaler l'utilisateur</span>
+//               </DropdownMenuItem>
+//               <DropdownMenuItem onClick={handleDeleteChat} className="text-red-600">
+//                 <Delete className="mr-2 h-4 w-4" />
+//                 <span>Supprimer la conversation</span>
+//               </DropdownMenuItem>
+//             </DropdownMenuContent>
+//           </DropdownMenu>
+//         </div>
+//       </div>
+
+//       {/* Corps de la fenêtre de chat */}
+//       <div className="flex flex-col h-screen"> 
+//         <div className="flex-1 overflow-y-auto">
+//           {/* Affichage des messages */}
+//           <div className="messages-container" style={{ padding: '10px' }}>
+//             {messages.length === 0 ? (
+//               <div className="flex items-center justify-center h-full text-muted-foreground">
+//                 Aucun message. Commencez la conversation !
+//               </div>
+//             ) : (
+//               messages.map((message, index) => (
+//                 <div key={index} className={`flex justify-${message.sent ? 'end' : 'start'} mb-4`}>
+//                   <div className={`bg-${message.sent ? 'primary' : 'secondary'} rounded-lg p-4 max-w-md`}>
+//                     {message.text}
+//                   </div>
+//                 </div>
+//               ))
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Champ de saisie pour envoyer un message */}
+//         <MessageInput onSendMessage={handleSendMessage} setMessageContent={setMessageContent} />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default ChatWindow;
+
     <div className="h-full flex flex-col bg-background">
       {/* En-tête de la fenêtre de chat */}
-      <div className="p-4 border-b border-border flex items-center justify-between bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+      <div className="p-4 border-b border-border flex items-center justify-between bg-background/95 backdrop-blur sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="md:hidden">
-          <ArrowLeft className="w-6 h-6" />
-        </button>
+            <ArrowLeft className="w-6 h-6" />
+          </button>
 
-        {/* Affichage de l'avatar de l'utilisateur sélectionné */}
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
-            {/* Image de l'avatar ou fallback si l'image n'est pas disponible */}
-            <AvatarImage src={selectedChatUser?.profile_picture_url} />
-            <AvatarFallback>{selectedChatUser?.name.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
-
-          {/* Affichage du nom de l'utilisateur sélectionné */}
-          <div>
-            <h2 className="font-medium">{selectedChatUser?.name}</h2> {/* Affiche le nom de l'utilisateur sélectionné */}
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={selectedChatUser?.profile_picture_url} />
+              <AvatarFallback>{selectedChatUser?.name.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            
+            <div className="hidden sm:block">
+              <h2 className="font-medium">{selectedChatUser?.name}</h2>
               <span className="text-sm text-green-500">{selectedChatUser?.username} - En ligne</span>
             </div>
           </div>
         </div>
 
-        {/* Boutons d'actions */}
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+          <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
             <Video className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+          <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
             <Phone className="h-5 w-5" />
           </Button>
           <DropdownMenu>
@@ -269,20 +361,20 @@ const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={handleStarMessage}>
+              <DropdownMenuItem onClick={() => toast({ title: "Message enregistré", description: "Le message a été ajouté aux favoris" })}>
                 <Star className="mr-2 h-4 w-4" />
                 <span>Enregistrer les messages</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleArchiveChat}>
+              <DropdownMenuItem onClick={() => toast({ title: "Chat archivé", description: "Cette conversation a été archivée" })}>
                 <Archive className="mr-2 h-4 w-4" />
                 <span>Archiver la conversation</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleBlockUser} className="text-red-600">
+              <DropdownMenuItem onClick={() => toast({ title: "Utilisateur bloqué", description: "Vous avez bloqué cet utilisateur" })} className="text-red-600">
                 <Ban className="mr-2 h-4 w-4" />
                 <span>Bloquer l'utilisateur</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleReportUser} className="text-yellow-600">
+              <DropdownMenuItem onClick={() => toast({ title: "Utilisateur signalé", description: "Votre signalement a été envoyé" })} className="text-yellow-600">
                 <Flag className="mr-2 h-4 w-4" />
                 <span>Signaler l'utilisateur</span>
               </DropdownMenuItem>
@@ -296,31 +388,32 @@ const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
       </div>
 
       {/* Corps de la fenêtre de chat */}
-      <div className="flex flex-col h-screen"> 
-        <div className="flex-1 overflow-y-auto">
-          {/* Affichage des messages */}
-          <div className="messages-container" style={{ padding: '10px' }}>
-            {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Aucun message. Commencez la conversation !
-              </div>
-            ) : (
-              messages.map((message, index) => (
-                <div key={index} className={`flex justify-${message.sent ? 'end' : 'start'} mb-4`}>
-                  <div className={`bg-${message.sent ? 'primary' : 'secondary'} rounded-lg p-4 max-w-md`}>
-                    {message.text}
-                  </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="messages-container space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              Aucun message. Commencez la conversation !
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div key={index} className={`flex justify-${message.sent ? 'end' : 'start'} mb-4`}>
+                <div className={`bg-${message.sent ? 'primary' : 'secondary'} rounded-lg p-4 max-w-md`}>
+                  {message.text}
                 </div>
-              ))
-            )}
-          </div>
+              </div>
+            ))
+          )}
         </div>
-
-        {/* Champ de saisie pour envoyer un message */}
+         {/* Champ de saisie pour envoyer un message */}
+      <div className="p-4 border-t border-border">
         <MessageInput onSendMessage={handleSendMessage} setMessageContent={setMessageContent} />
       </div>
+      </div>
+
+      
     </div>
   );
 };
 
 export default ChatWindow;
+
