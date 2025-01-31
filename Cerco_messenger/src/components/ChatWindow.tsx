@@ -297,8 +297,8 @@ const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
 
 
      {/* Center - Affichage des messages */}
-     <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 240px)' }}>
-        <div className="messages-container" style={{ padding: '10px', maxHeight: 'calc(100vh - 240px)', overflowY: 'auto' }}>
+     <div className="flex-1 overflow-y-auto" style={{ padding: '10px', height: 'calc(100vh - 240px)', scrollbarWidth: 'none' }}>
+        <div className="messages-container" style={{ padding: '10px', overflowY: 'scroll', height: '100%', scrollbarWidth: 'none' }}>
             {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                     Aucun message. Commencez la conversation !
@@ -313,7 +313,7 @@ const ChatWindow = ({ selectedChatUser, onBack }: ChatWindowProps) => {
                 ))
             )}
         </div>
-    </div>
+      </div>
 
      {/* Footer - Champ de saisie pour envoyer un message */}
      <div className="footer h-16" style={{ flexShrink: 0, justifyContent: 'end',position: 'relative', top: '10px' }}>
